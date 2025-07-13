@@ -100,6 +100,7 @@ FX/
 │   ├── architecture.md       # 架构设计文档
 │   ├── coding-standards.md   # 代码规范
 │   ├── api-reference.md      # API参考文档
+│   ├── git-commit-standards.md  # GIT提交规范
 │   └── deployment.md         # 部署说明
 └── README.md                 # 项目说明文档
 ```
@@ -205,14 +206,9 @@ FX/
 - [架构设计文档](docs/architecture.md) - 完整的系统架构设计
 - [代码规范](docs/coding-standards.md) - 严格的编码标准
 - [API参考文档](docs/api-reference.md) - 详细的API说明
+- [GIT提交规范](docs/git-commit-standards.md) - 标准的GIT提交规范
 - [部署说明](docs/deployment.md) - 项目部署指南
-
-### 开发回顾文档（位于同级docs目录）
-- [回顾01-项目架构搭建](../docs/回顾01-项目架构搭建.md)
-- [回顾04-核心管理器架构实现](../docs/回顾04-核心管理器架构实现.md)
-- [回顾05-数据结构架构实现](../docs/回顾05-数据结构架构实现.md)
-- [回顾06-主程序架构完整实现](../docs/回顾06-主程序架构完整实现.md)
-
+  
 ### 技术特点
 - **企业级架构**：采用现代软件架构设计理念
 - **模块化设计**：清晰的模块划分，便于团队协作
