@@ -31,13 +31,6 @@
 - Git + Git LFS
 - Windows 10/11 或 macOS 12+
 
-### 安装步骤
-1. 克隆仓库：`git clone [仓库地址]`
-2. 使用Unity Hub打开项目
-3. 等待Unity导入和编译完成
-4. 打开主场景：`Assets/Scenes/Main/GameMain.unity`
-5. 点击播放按钮开始测试
-
 ### 开发工具配置
 - **Unity插件**：DOTween、TextMeshPro、Unity Analytics
 - **推荐插件**：Odin Inspector、Cinemachine
