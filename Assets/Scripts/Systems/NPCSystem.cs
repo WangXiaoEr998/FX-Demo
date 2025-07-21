@@ -10,52 +10,56 @@ using FanXing.Data;
 public class NPCSystem : BaseGameSystem
 {
     #region 字段定义
-    [Header("NPC系统配置")]
+
+    [Header("NPC系统配置")] 
     [SerializeField] private int _maxNPCCount = 50;
     [SerializeField] private float _npcUpdateInterval = 0.1f;
-    #pragma warning disable CS0414 // 字段已赋值但从未使用 - Demo版本中暂未实现相关功能
+#pragma warning disable CS0414 // 字段已赋值但从未使用 - Demo版本中暂未实现相关功能
     [SerializeField] private float _interactionRange = 3.0f;
-    #pragma warning restore CS0414
-    
-    [Header("NPC预制体")]
-    [SerializeField] private GameObject[] _npcPrefabs;
-    
+#pragma warning restore CS0414
+
+    [Header("NPC预制体")] [SerializeField] private GameObject[] _npcPrefabs;
+
     // NPC管理
     private List<GameObject> _activeNPCs = new List<GameObject>();
     private Dictionary<int, GameObject> _npcDictionary = new Dictionary<int, GameObject>();
     private Queue<GameObject> _npcPool = new Queue<GameObject>();
-    
+
     // 对话系统
     private GameObject _currentInteractingNPC;
     private bool _isInDialogue = false;
-    
+
     // 更新计时器
     private float _updateTimer = 0f;
+
     #endregion
 
     #region 属性
+
     /// <summary>
     /// 系统名称
     /// </summary>
     public override string SystemName => "NPC系统";
-    
+
     /// <summary>
     /// 当前活跃NPC数量
     /// </summary>
     public int ActiveNPCCount => _activeNPCs.Count;
-    
+
     /// <summary>
     /// 是否正在对话中
     /// </summary>
     public bool IsInDialogue => _isInDialogue;
-    
+
     /// <summary>
     /// 当前交互的NPC
     /// </summary>
     public GameObject CurrentInteractingNPC => _currentInteractingNPC;
+
     #endregion
 
     #region BaseGameSystem抽象方法实现
+
     /// <summary>
     /// 系统初始化时调用
     /// </summary>
@@ -104,9 +108,21 @@ public class NPCSystem : BaseGameSystem
             _updateTimer = 0f;
         }
     }
+
+    /// <summary>
+    /// 系统关闭时调用
+    /// </summary>
+    protected override void OnShutdown()
+    {
+        base.OnShutdown();
+        UnregisterEventListeners();
+        ClearAllNPCs();
+    }
+
     #endregion
 
     #region 私有方法
+
     /// <summary>
     /// 初始化NPC对象池
     /// </summary>
@@ -193,10 +209,10 @@ public class NPCSystem : BaseGameSystem
                 DestroyImmediate(npc);
             }
         }
-        
+
         _activeNPCs.Clear();
         _npcDictionary.Clear();
-        
+
         while (_npcPool.Count > 0)
         {
             var npc = _npcPool.Dequeue();
@@ -206,9 +222,11 @@ public class NPCSystem : BaseGameSystem
             }
         }
     }
+
     #endregion
 
     #region 公共方法
+
     /// <summary>
     /// 创建NPC
     /// </summary>
@@ -229,7 +247,7 @@ public class NPCSystem : BaseGameSystem
             npc.transform.position = position;
             npc.SetActive(true);
             _activeNPCs.Add(npc);
-            
+
             if (_enableDebugMode)
             {
                 Debug.Log($"创建NPC: {npcType} 在位置 {position}");
@@ -273,7 +291,7 @@ public class NPCSystem : BaseGameSystem
 
         _currentInteractingNPC = npc;
         _isInDialogue = true;
-        
+
         if (_enableDebugMode)
         {
             Debug.Log($"开始与NPC对话: {npc.name}");
@@ -296,5 +314,6 @@ public class NPCSystem : BaseGameSystem
         _currentInteractingNPC = null;
         _isInDialogue = false;
     }
+
     #endregion
 }
