@@ -4,8 +4,8 @@ using FanXing.Data;
 
 /// <summary>
 /// 属性管理器，负责玩家属性系统的管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class AttributeManager : MonoBehaviour
 {
@@ -410,12 +410,12 @@ public class AttributeManager : MonoBehaviour
     private void RegisterEvents()
     {
         LogDebug("注册属性管理器事件");
-        
-        Global.RegisterEvent(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.RegisterEvent(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
-        Global.RegisterEvent(Global.Events.Skill.LEARNED, OnSkillLearned);
-        Global.RegisterEvent(Global.Events.Item.EQUIPPED, OnItemEquipped);
-        Global.RegisterEvent(Global.Events.Item.UNEQUIPPED, OnItemUnequipped);
+
+        Global.Event.Register(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.Register<ProfessionChangedEventArgs>(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
+        Global.Event.Register<SkillLearnedEventArgs>(Global.Events.Skill.LEARNED, OnSkillLearned);
+        Global.Event.Register(Global.Events.Item.EQUIPPED, OnItemEquipped);
+        Global.Event.Register(Global.Events.Item.UNEQUIPPED, OnItemUnequipped);
     }
 
     /// <summary>
@@ -425,11 +425,11 @@ public class AttributeManager : MonoBehaviour
     {
         LogDebug("注销属性管理器事件");
         
-        Global.UnregisterEvent(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.UnregisterEvent(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
-        Global.UnregisterEvent(Global.Events.Skill.LEARNED, OnSkillLearned);
-        Global.UnregisterEvent(Global.Events.Item.EQUIPPED, OnItemEquipped);
-        Global.UnregisterEvent(Global.Events.Item.UNEQUIPPED, OnItemUnequipped);
+        Global.Event.UnRegister(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.UnRegister<ProfessionChangedEventArgs>(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
+        Global.Event.UnRegister<SkillLearnedEventArgs>(Global.Events.Skill.LEARNED, OnSkillLearned);
+        Global.Event.UnRegister(Global.Events.Item.EQUIPPED, OnItemEquipped);
+        Global.Event.UnRegister(Global.Events.Item.UNEQUIPPED, OnItemUnequipped);
     }
     #endregion
 
@@ -457,7 +457,7 @@ public class AttributeManager : MonoBehaviour
         ApplyAttributeModifiers(_currentAttributes);
         
         // 触发属性更新事件
-        Global.TriggerEvent(Global.Events.Player.HEALTH_CHANGED, _currentAttributes);
+        Global.Event.TriggerEvent(Global.Events.Player.HEALTH_CHANGED, _currentAttributes);
     }
 
     /// <summary>
@@ -571,8 +571,7 @@ public class AttributeManager : MonoBehaviour
     /// <summary>
     /// 玩家升级事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnPlayerLevelUp(object eventArgs)
+    private void OnPlayerLevelUp()
     {
         LogDebug("处理玩家升级事件");
         
@@ -583,8 +582,7 @@ public class AttributeManager : MonoBehaviour
     /// <summary>
     /// 职业改变事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnProfessionChanged(object eventArgs)
+    private void OnProfessionChanged(ProfessionChangedEventArgs args)
     {
         LogDebug("处理职业改变事件");
         
@@ -595,8 +593,7 @@ public class AttributeManager : MonoBehaviour
     /// <summary>
     /// 技能学习事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnSkillLearned(object eventArgs)
+    private void OnSkillLearned(SkillLearnedEventArgs args)
     {
         LogDebug("处理技能学习事件");
         
@@ -607,8 +604,7 @@ public class AttributeManager : MonoBehaviour
     /// <summary>
     /// 装备穿戴事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnItemEquipped(object eventArgs)
+    private void OnItemEquipped()
     {
         LogDebug("处理装备穿戴事件");
         
@@ -619,8 +615,7 @@ public class AttributeManager : MonoBehaviour
     /// <summary>
     /// 装备卸下事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnItemUnequipped(object eventArgs)
+    private void OnItemUnequipped()
     {
         LogDebug("处理装备卸下事件");
         

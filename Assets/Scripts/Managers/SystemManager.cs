@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 系统管理器，负责游戏各个子系统的初始化、更新和管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class SystemManager : MonoBehaviour
 {
@@ -159,7 +159,7 @@ public class SystemManager : MonoBehaviour
         _systemsInitialized = true;
         
         // 触发系统初始化完成事件
-        Global.TriggerEvent(Global.Events.System.INITIALIZED);
+        Global.Event.TriggerEvent(Global.Events.System.INITIALIZED);
         
         if (_enableDebugMode)
         {
@@ -209,7 +209,7 @@ public class SystemManager : MonoBehaviour
         _systemsStarted = true;
         
         // 触发系统启动完成事件
-        Global.TriggerEvent(Global.Events.System.STARTED);
+        Global.Event.TriggerEvent(Global.Events.System.STARTED);
         
         if (_enableDebugMode)
         {
@@ -249,7 +249,7 @@ public class SystemManager : MonoBehaviour
         _systemsInitialized = false;
         
         // 触发系统关闭完成事件
-        Global.TriggerEvent(Global.Events.System.SHUTDOWN);
+        Global.Event.TriggerEvent(Global.Events.System.SHUTDOWN);
         
         if (_enableDebugMode)
         {

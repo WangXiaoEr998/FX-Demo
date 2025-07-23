@@ -5,8 +5,9 @@ using FanXing.Data;
 /// <summary>
 /// 全局统一调用入口，提供所有系统和管理器的统一访问接口
 /// 解决模块间相互依赖问题，作为唯一的系统间通信入口
-/// 作者：黄畅修
-/// 创建时间：2025-07-13
+/// 事件系统可支持4个参数泛型（做了容错避免反复注册事件）
+/// 作者：黄畅修,容泳森
+/// 创建时间：2025-07-13，修改时间：2025-07-22
 /// </summary>
 public static class Global
 {
@@ -97,65 +98,6 @@ public static class Global
     /// 商店系统
     /// </summary>
     public static ShopSystem Shop => GetSystem<ShopSystem>();
-    #endregion
-
-    #region 事件系统统一接口
-    /// <summary>
-    /// 注册事件监听器
-    /// </summary>
-    /// <param name="eventName">事件名称</param>
-    /// <param name="listener">监听器</param>
-    public static void RegisterEvent(string eventName, Action<object> listener)
-    {
-        Event?.RegisterEvent(eventName, listener);
-    }
-    
-    /// <summary>
-    /// 注册事件监听器（泛型版本）
-    /// </summary>
-    /// <typeparam name="T">事件参数类型</typeparam>
-    /// <param name="eventName">事件名称</param>
-    /// <param name="listener">监听器</param>
-    public static void RegisterEvent<T>(string eventName, Action<T> listener) where T : class
-    {
-        Event?.RegisterEvent(eventName, (obj) => {
-            if (obj is T typedObj)
-            {
-                listener?.Invoke(typedObj);
-            }
-        });
-    }
-    
-    /// <summary>
-    /// 触发事件
-    /// </summary>
-    /// <param name="eventName">事件名称</param>
-    /// <param name="eventArgs">事件参数</param>
-    public static void TriggerEvent(string eventName, object eventArgs = null)
-    {
-        Event?.TriggerEvent(eventName, eventArgs);
-    }
-    
-    /// <summary>
-    /// 注销事件监听器
-    /// </summary>
-    /// <param name="eventName">事件名称</param>
-    /// <param name="listener">监听器</param>
-    public static void UnregisterEvent(string eventName, Action<object> listener)
-    {
-        Event?.UnregisterEvent(eventName, listener);
-    }
-    
-    /// <summary>
-    /// 延迟触发事件
-    /// </summary>
-    /// <param name="eventName">事件名称</param>
-    /// <param name="delay">延迟时间（秒）</param>
-    /// <param name="eventArgs">事件参数</param>
-    public static void TriggerEventDelayed(string eventName, float delay, object eventArgs = null)
-    {
-        Event?.TriggerEventDelayed(eventName, delay, eventArgs);
-    }
     #endregion
 
     #region 事件常量快捷访问

@@ -2,8 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// 游戏系统基类，提供系统的基础实现
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修,容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public abstract class BaseGameSystem : MonoBehaviour, IGameSystem
 {
@@ -333,10 +333,10 @@ public abstract class BaseGameSystem : MonoBehaviour, IGameSystem
     /// 触发系统事件
     /// </summary>
     /// <param name="eventName">事件名称</param>
-    /// <param name="eventArgs">事件参数</param>
-    protected void TriggerEvent(string eventName, object eventArgs = null)
+    /// <param name="t">事件参数</param>
+    protected void TriggerEvent<T>(string eventName, T t)
     {
-        Global.TriggerEvent(eventName, eventArgs);
+        Global.Event.TriggerEvent(eventName, t);
     }
 
     /// <summary>
@@ -346,7 +346,7 @@ public abstract class BaseGameSystem : MonoBehaviour, IGameSystem
     /// <param name="callback">回调函数</param>
     protected void RegisterEvent(string eventName, System.Action<object> callback)
     {
-        Global.RegisterEvent(eventName, callback);
+        Global.Event.Register(eventName, callback);
     }
 
     /// <summary>
@@ -356,7 +356,7 @@ public abstract class BaseGameSystem : MonoBehaviour, IGameSystem
     /// <param name="callback">回调函数</param>
     protected void UnregisterEvent(string eventName, System.Action<object> callback)
     {
-        Global.UnregisterEvent(eventName, callback);
+        Global.Event.UnRegister(eventName, callback);
     }
     #endregion
 }

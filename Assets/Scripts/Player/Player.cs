@@ -3,8 +3,8 @@ using FanXing.Data;
 
 /// <summary>
 /// 玩家组件，负责玩家角色的具体行为和表现
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修,容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class Player : MonoBehaviour
 {
@@ -353,7 +353,7 @@ public class Player : MonoBehaviour
         LogDebug("处理交互输入");
         
         // 触发交互事件
-        Global.TriggerEvent(Global.Events.NPC.INTERACTION_STARTED, transform.position);
+        Global.Event.TriggerEvent(Global.Events.NPC.INTERACTION_STARTED, transform.position);
     }
 
     /// <summary>
@@ -364,7 +364,7 @@ public class Player : MonoBehaviour
         LogDebug("切换背包界面");
         
         // 触发UI事件
-        Global.TriggerEvent(Global.Events.UI.PANEL_OPENED, null);
+        Global.Event.TriggerEvent(Global.Events.UI.PANEL_OPENED);
     }
 
     /// <summary>
@@ -375,7 +375,7 @@ public class Player : MonoBehaviour
         LogDebug("切换角色面板");
         
         // 触发UI事件
-        Global.TriggerEvent(Global.Events.UI.PANEL_OPENED, null);
+        Global.Event.TriggerEvent(Global.Events.UI.PANEL_OPENED);
     }
     #endregion
 

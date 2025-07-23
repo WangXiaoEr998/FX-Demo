@@ -4,8 +4,8 @@ using System.Linq;
 using FanXing.Data;
 /// <summary>
 /// 技能管理器，负责玩家技能系统的管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class SkillManager : MonoBehaviour
 {
@@ -161,7 +161,7 @@ public class SkillManager : MonoBehaviour
         _learnedSkills[skillId] = learnedSkill;
 
         // 触发技能学习事件
-        Global.TriggerEvent(Global.Events.Skill.LEARNED,
+        Global.Event.TriggerEvent(Global.Events.Skill.LEARNED,
             new SkillLearnedEventArgs(skillId, skill.skillName, 1));
 
         return true;
@@ -201,7 +201,7 @@ public class SkillManager : MonoBehaviour
         skill.currentLevel++;
 
         // 触发技能升级事件
-        Global.TriggerEvent(Global.Events.Skill.UPGRADED,
+        Global.Event.TriggerEvent(Global.Events.Skill.UPGRADED,
             new SkillUpgradedEventArgs(skillId, oldLevel, skill.currentLevel));
 
         return true;
@@ -242,7 +242,7 @@ public class SkillManager : MonoBehaviour
 
             // 触发技能使用事件
             Vector3 position = target != null ? target.transform.position : Vector3.zero;
-            Global.TriggerEvent(Global.Events.Skill.USED,
+            Global.Event.TriggerEvent(Global.Events.Skill.USED,
                 new SkillUsedEventArgs(skillId, target, position, success));
         }
 
@@ -550,8 +550,8 @@ public class SkillManager : MonoBehaviour
     {
         LogDebug("注册技能管理器事件");
 
-        Global.RegisterEvent(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.RegisterEvent(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
+        Global.Event.Register<ProfessionLevelUpEventArgs>(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.Register<ProfessionChangedEventArgs>(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
     }
 
     /// <summary>
@@ -561,8 +561,8 @@ public class SkillManager : MonoBehaviour
     {
         LogDebug("注销技能管理器事件");
 
-        Global.UnregisterEvent(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.UnregisterEvent(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
+        Global.Event.UnRegister<ProfessionLevelUpEventArgs>(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.UnRegister<ProfessionChangedEventArgs>(Global.Events.Player.PROFESSION_CHANGED, OnProfessionChanged);
     }
     #endregion
 
@@ -862,8 +862,7 @@ public class SkillManager : MonoBehaviour
     /// <summary>
     /// 玩家升级事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnPlayerLevelUp(object eventArgs)
+    private void OnPlayerLevelUp(ProfessionLevelUpEventArgs args)
     {
         LogDebug("处理玩家升级事件");
 
@@ -873,8 +872,7 @@ public class SkillManager : MonoBehaviour
     /// <summary>
     /// 职业改变事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnProfessionChanged(object eventArgs)
+    private void OnProfessionChanged(ProfessionChangedEventArgs args)
     {
         LogDebug("处理职业改变事件");
 
