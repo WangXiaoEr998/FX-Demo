@@ -3,8 +3,8 @@ using FanXing.Data;
 
 /// <summary>
 /// 玩家组件，负责玩家角色的具体行为和表现
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修,容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class Player : MonoBehaviour
 {

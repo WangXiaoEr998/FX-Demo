@@ -4,8 +4,8 @@ using FanXing.Data;
 
 /// <summary>
 /// 商店系统，负责商店管理、商品交易、库存管理等功能
-/// 作者：黄畅修
-/// 创建时间：2025-07-13
+/// 作者：黄畅修，容泳森
+/// 创建时间：2025-07-23
 /// </summary>
 public class ShopSystem : BaseGameSystem
 {

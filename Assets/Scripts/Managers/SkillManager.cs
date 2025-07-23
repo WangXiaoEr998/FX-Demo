@@ -4,8 +4,8 @@ using System.Linq;
 using FanXing.Data;
 /// <summary>
 /// 技能管理器，负责玩家技能系统的管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class SkillManager : MonoBehaviour
 {

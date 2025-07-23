@@ -2,8 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// 游戏系统基类，提供系统的基础实现
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修,容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public abstract class BaseGameSystem : MonoBehaviour, IGameSystem
 {

@@ -2,8 +2,8 @@ using UnityEngine;
 using FanXing.Data;
 /// <summary>
 /// 游戏总控制器，负责游戏状态管理、场景切换、核心系统初始化
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修,容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class GameManager : MonoBehaviour
 {

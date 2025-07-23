@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 系统管理器，负责游戏各个子系统的初始化、更新和管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class SystemManager : MonoBehaviour
 {

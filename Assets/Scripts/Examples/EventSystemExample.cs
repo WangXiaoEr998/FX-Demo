@@ -4,8 +4,8 @@ using FanXing.Data;
 /// <summary>
 /// 事件系统使用示例，展示如何通过Global统一入口使用事件系统
 /// 避免模块间相互依赖，统一事件通信规范
-/// 作者：黄畅修
-/// 创建时间：2025-07-13
+/// 作者：容泳森
+/// 修改时间：2025-07-23
 /// </summary>
 public class EventSystemExample : MonoBehaviour
 {
