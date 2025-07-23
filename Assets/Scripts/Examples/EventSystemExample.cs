@@ -58,50 +58,50 @@ public class EventSystemExample : MonoBehaviour
         // 使用Global统一入口注册事件监听器
         
         // 游戏状态事件
-        Global.RegisterEvent<GameStateEventArgs>(Global.Events.Game.STATE_CHANGED, OnGameStateChanged);
-        Global.RegisterEvent(Global.Events.Game.STARTED, OnGameStarted);
-        Global.RegisterEvent(Global.Events.Game.PAUSED, OnGamePaused);
+        Global.Event.Register<GameStateEventArgs>(Global.Events.Game.STATE_CHANGED, OnGameStateChanged);
+        Global.Event.Register(Global.Events.Game.STARTED, OnGameStarted);
+        Global.Event.Register(Global.Events.Game.PAUSED, OnGamePaused);
 
         // 玩家事件
-        Global.RegisterEvent<PlayerCreatedEventArgs>(Global.Events.Player.CREATED, OnPlayerCreated);
-        Global.RegisterEvent<PlayerLevelUpEventArgs>(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.RegisterEvent<PlayerHealthChangedEventArgs>(Global.Events.Player.HEALTH_CHANGED, OnPlayerHealthChanged);
+        Global.Event.Register<PlayerCreatedEventArgs>(Global.Events.Player.CREATED, OnPlayerCreated);
+        Global.Event.Register<PlayerLevelUpEventArgs>(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.Register<PlayerHealthChangedEventArgs>(Global.Events.Player.HEALTH_CHANGED, OnPlayerHealthChanged);
 
         // 技能事件
-        Global.RegisterEvent<SkillLearnedEventArgs>(Global.Events.Skill.LEARNED, OnSkillLearned);
-        Global.RegisterEvent<SkillUsedEventArgs>(Global.Events.Skill.USED, OnSkillUsed);
+        Global.Event.Register<SkillLearnedEventArgs>(Global.Events.Skill.LEARNED, OnSkillLearned);
+        Global.Event.Register<SkillUsedEventArgs>(Global.Events.Skill.USED, OnSkillUsed);
 
         // 物品事件
-        Global.RegisterEvent<ItemAcquiredEventArgs>(Global.Events.Item.ACQUIRED, OnItemAcquired);
-        Global.RegisterEvent<ItemUsedEventArgs>(Global.Events.Item.USED, OnItemUsed);
+        Global.Event.Register<ItemAcquiredEventArgs>(Global.Events.Item.ACQUIRED, OnItemAcquired);
+        Global.Event.Register<ItemUsedEventArgs>(Global.Events.Item.USED, OnItemUsed);
 
         // NPC事件
-        Global.RegisterEvent(Global.Events.NPC.DIALOGUE_STARTED, OnNPCDialogueStarted);
-        Global.RegisterEvent(Global.Events.NPC.INTERACTION_STARTED, OnNPCInteractionStarted);
+        Global.Event.Register(Global.Events.NPC.DIALOGUE_STARTED, OnNPCDialogueStarted);
+        Global.Event.Register(Global.Events.NPC.INTERACTION_STARTED, OnNPCInteractionStarted);
 
         // 任务事件
-        Global.RegisterEvent<QuestAcceptedEventArgs>(Global.Events.Quest.ACCEPTED, OnQuestAccepted);
-        Global.RegisterEvent<QuestCompletedEventArgs>(Global.Events.Quest.COMPLETED, OnQuestCompleted);
+        Global.Event.Register<QuestAcceptedEventArgs>(Global.Events.Quest.ACCEPTED, OnQuestAccepted);
+        Global.Event.Register<QuestCompletedEventArgs>(Global.Events.Quest.COMPLETED, OnQuestCompleted);
 
         // 战斗事件
-        Global.RegisterEvent(Global.Events.Combat.STARTED, OnCombatStarted);
-        Global.RegisterEvent<DamageDealtEventArgs>(Global.Events.Combat.DAMAGE_DEALT, OnDamageDealt);
+        Global.Event.Register(Global.Events.Combat.STARTED, OnCombatStarted);
+        Global.Event.Register<DamageDealtEventArgs>(Global.Events.Combat.DAMAGE_DEALT, OnDamageDealt);
 
         // 经济事件
-        Global.RegisterEvent<GoldGainedEventArgs>(Global.Events.Economy.GOLD_GAINED, OnGoldGained);
-        Global.RegisterEvent<ItemBoughtEventArgs>(Global.Events.Economy.ITEM_BOUGHT, OnItemBought);
+        Global.Event.Register<GoldGainedEventArgs>(Global.Events.Economy.GOLD_GAINED, OnGoldGained);
+        Global.Event.Register<ItemBoughtEventArgs>(Global.Events.Economy.ITEM_BOUGHT, OnItemBought);
 
         // 种田事件
-        Global.RegisterEvent<CropPlantedEventArgs>(Global.Events.Farming.CROP_PLANTED, OnCropPlanted);
-        Global.RegisterEvent<CropHarvestedEventArgs>(Global.Events.Farming.CROP_HARVESTED, OnCropHarvested);
+        Global.Event.Register<CropPlantedEventArgs>(Global.Events.Farming.CROP_PLANTED, OnCropPlanted);
+        Global.Event.Register<CropHarvestedEventArgs>(Global.Events.Farming.CROP_HARVESTED, OnCropHarvested);
 
         // UI事件
-        Global.RegisterEvent(Global.Events.UI.PANEL_OPENED, OnUIPanelOpened);
-        Global.RegisterEvent(Global.Events.UI.BUTTON_CLICKED, OnUIButtonClicked);
+        Global.Event.Register(Global.Events.UI.PANEL_OPENED, OnUIPanelOpened);
+        Global.Event.Register(Global.Events.UI.BUTTON_CLICKED, OnUIButtonClicked);
 
         // 数据事件
-        Global.RegisterEvent(Global.Events.Data.SAVED, OnDataSaved);
-        Global.RegisterEvent(Global.Events.Data.LOADED, OnDataLoaded);
+        Global.Event.Register(Global.Events.Data.SAVED, OnDataSaved);
+        Global.Event.Register(Global.Events.Data.LOADED, OnDataLoaded);
         
         Debug.Log("[EventSystemExample] 所有事件监听器已注册");
     }
@@ -165,59 +165,59 @@ public class EventSystemExample : MonoBehaviour
     private void TriggerGameStateEvent()
     {
         var args = new GameStateEventArgs(GameState.MainMenu, GameState.Playing, Time.time);
-        Global.TriggerEvent(Global.Events.Game.STATE_CHANGED, args);
+        Global.Event.TriggerEvent(Global.Events.Game.STATE_CHANGED, args);
     }
 
     private void TriggerPlayerEvent()
     {
         var args = new PlayerLevelUpEventArgs(5, 6);
-        Global.TriggerEvent(Global.Events.Player.LEVEL_UP, args);
+        Global.Event.TriggerEvent(Global.Events.Player.LEVEL_UP, args);
     }
 
     private void TriggerSkillEvent()
     {
         var args = new SkillLearnedEventArgs("TestSkill", "测试技能", 1);
-        Global.TriggerEvent(Global.Events.Skill.LEARNED, args);
+        Global.Event.TriggerEvent(Global.Events.Skill.LEARNED, args);
     }
 
     private void TriggerItemEvent()
     {
         var itemData = new ItemData { itemName = "测试物品", itemType = ItemType.Consumable, currentStack = 1 };
         var args = new ItemAcquiredEventArgs(itemData, 1, "拾取");
-        Global.TriggerEvent(Global.Events.Item.ACQUIRED, args);
+        Global.Event.TriggerEvent(Global.Events.Item.ACQUIRED, args);
     }
 
     private void TriggerNPCEvent()
     {
-        Global.TriggerEvent(Global.Events.NPC.DIALOGUE_STARTED, null);
+        Global.Event.TriggerEvent(Global.Events.NPC.DIALOGUE_STARTED);
     }
 
     private void TriggerQuestEvent()
     {
         var args = new QuestAcceptedEventArgs("quest_001", "测试任务", QuestType.Side);
-        Global.TriggerEvent(Global.Events.Quest.ACCEPTED, args);
+        Global.Event.TriggerEvent(Global.Events.Quest.ACCEPTED, args);
     }
 
     private void TriggerCombatEvent()
     {
-        Global.TriggerEvent(Global.Events.Combat.STARTED, null);
+        Global.Event.TriggerEvent(Global.Events.Combat.STARTED);
     }
 
     private void TriggerEconomyEvent()
     {
         var args = new GoldGainedEventArgs(100, "任务奖励");
-        Global.TriggerEvent(Global.Events.Economy.GOLD_GAINED, args);
+        Global.Event.TriggerEvent(Global.Events.Economy.GOLD_GAINED, args);
     }
 
     private void TriggerFarmingEvent()
     {
         var args = new CropPlantedEventArgs(CropType.Wheat, Vector3Int.zero, "TestPlayer");
-        Global.TriggerEvent(Global.Events.Farming.CROP_PLANTED, args);
+        Global.Event.TriggerEvent(Global.Events.Farming.CROP_PLANTED, args);
     }
 
     private void TriggerUIEvent()
     {
-        Global.TriggerEvent(Global.Events.UI.PANEL_OPENED, null);
+        Global.Event.TriggerEvent(Global.Events.UI.PANEL_OPENED);
     }
     #endregion
 
@@ -228,12 +228,12 @@ public class EventSystemExample : MonoBehaviour
         Debug.Log($"[EventSystemExample] 游戏状态改变: {args.PreviousState} -> {args.NewState}");
     }
 
-    private void OnGameStarted(object args)
+    private void OnGameStarted()
     {
         Debug.Log("[EventSystemExample] 游戏开始");
     }
 
-    private void OnGamePaused(object args)
+    private void OnGamePaused()
     {
         Debug.Log("[EventSystemExample] 游戏暂停");
     }
@@ -277,12 +277,12 @@ public class EventSystemExample : MonoBehaviour
     }
 
     // NPC事件处理器
-    private void OnNPCDialogueStarted(object args)
+    private void OnNPCDialogueStarted()
     {
         Debug.Log("[EventSystemExample] NPC对话开始");
     }
 
-    private void OnNPCInteractionStarted(object args)
+    private void OnNPCInteractionStarted()
     {
         Debug.Log("[EventSystemExample] NPC交互开始");
     }
@@ -299,7 +299,7 @@ public class EventSystemExample : MonoBehaviour
     }
 
     // 战斗事件处理器
-    private void OnCombatStarted(object args)
+    private void OnCombatStarted()
     {
         Debug.Log("[EventSystemExample] 战斗开始");
     }
@@ -332,23 +332,23 @@ public class EventSystemExample : MonoBehaviour
     }
 
     // UI事件处理器
-    private void OnUIPanelOpened(object args)
+    private void OnUIPanelOpened()
     {
         Debug.Log("[EventSystemExample] UI面板打开");
     }
 
-    private void OnUIButtonClicked(object args)
+    private void OnUIButtonClicked()
     {
         Debug.Log("[EventSystemExample] UI按钮点击");
     }
 
     // 数据事件处理器
-    private void OnDataSaved(object args)
+    private void OnDataSaved()
     {
         Debug.Log("[EventSystemExample] 数据保存");
     }
 
-    private void OnDataLoaded(object args)
+    private void OnDataLoaded()
     {
         Debug.Log("[EventSystemExample] 数据加载");
     }

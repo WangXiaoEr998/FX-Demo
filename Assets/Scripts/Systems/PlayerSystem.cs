@@ -223,7 +223,7 @@ public class PlayerSystem : BaseGameSystem
             _professionManager.SetProfession(initialProfession);
 
             // 触发玩家创建事件
-            Global.TriggerEvent(Global.Events.Player.CREATED, new PlayerCreatedEventArgs(_playerData));
+            Global.Event.TriggerEvent(Global.Events.Player.CREATED, new PlayerCreatedEventArgs(_playerData));
 
             LogDebug("新玩家创建成功");
             return true;
@@ -261,7 +261,7 @@ public class PlayerSystem : BaseGameSystem
             RestorePlayerState();
 
             // 触发玩家加载事件
-            Global.TriggerEvent(Global.Events.Player.LOADED, new PlayerLoadedEventArgs(_playerData));
+            Global.Event.TriggerEvent(Global.Events.Player.LOADED, new PlayerLoadedEventArgs(_playerData));
 
             LogDebug("玩家加载成功");
             return true;
@@ -296,7 +296,7 @@ public class PlayerSystem : BaseGameSystem
             Global.Data?.SaveGameData();
 
             // 触发保存事件
-            Global.TriggerEvent(Global.Events.Data.SAVED, new PlayerDataSavedEventArgs(_playerData));
+            Global.Event.TriggerEvent(Global.Events.Data.SAVED, new PlayerDataSavedEventArgs(_playerData));
 
             LogDebug("玩家数据保存成功");
         }
@@ -338,7 +338,7 @@ public class PlayerSystem : BaseGameSystem
             ChangePlayerState(PlayerState.Idle);
 
             // 触发重生事件
-            Global.TriggerEvent(Global.Events.Player.RESPAWN, new PlayerRespawnedEventArgs(_playerData));
+            Global.Event.TriggerEvent(Global.Events.Player.RESPAWN, new PlayerRespawnedEventArgs(_playerData));
 
             LogDebug("玩家重生成功");
         }
@@ -368,7 +368,7 @@ public class PlayerSystem : BaseGameSystem
         CheckLevelUp(oldLevel);
 
         // 触发经验值变化事件
-        Global.TriggerEvent(Global.Events.Player.EXPERIENCE_GAINED, new ExperienceChangedEventArgs(amount, _playerData.experience));
+        Global.Event.TriggerEvent(Global.Events.Player.EXPERIENCE_GAINED, new ExperienceChangedEventArgs(amount, _playerData.experience));
     }
 
     /// <summary>
@@ -385,7 +385,7 @@ public class PlayerSystem : BaseGameSystem
         _playerData.gold += amount;
 
         // 触发金币变化事件
-        Global.TriggerEvent(Global.Events.Economy.GOLD_GAINED, new GoldChangedEventArgs(amount, _playerData.gold));
+        Global.Event.TriggerEvent(Global.Events.Economy.GOLD_GAINED, new GoldChangedEventArgs(amount, _playerData.gold));
     }
 
     /// <summary>
@@ -409,7 +409,7 @@ public class PlayerSystem : BaseGameSystem
         _playerData.gold -= amount;
 
         // 触发金币变化事件
-        Global.TriggerEvent(Global.Events.Economy.GOLD_SPENT, new GoldChangedEventArgs(-amount, _playerData.gold));
+        Global.Event.TriggerEvent(Global.Events.Economy.GOLD_SPENT, new GoldChangedEventArgs(-amount, _playerData.gold));
 
         return true;
     }
@@ -429,7 +429,7 @@ public class PlayerSystem : BaseGameSystem
         LogDebug($"生命值变化: {amount}, 当前: {_playerData.currentHealth}/{_playerData.maxHealth}");
 
         // 触发生命值变化事件
-        Global.TriggerEvent(Global.Events.Player.HEALTH_CHANGED, new HealthChangedEventArgs(amount, _playerData.currentHealth, _playerData.maxHealth));
+        Global.Event.TriggerEvent(Global.Events.Player.HEALTH_CHANGED, new HealthChangedEventArgs(amount, _playerData.currentHealth, _playerData.maxHealth));
 
         // 检查死亡
         if (oldHealth > 0 && _playerData.currentHealth <= 0)
@@ -897,7 +897,7 @@ public class PlayerSystem : BaseGameSystem
         LogDebug($"玩家状态改变: {oldState} -> {newState}");
 
         // 触发状态改变事件
-        Global.TriggerEvent(Global.Events.Player.POSITION_CHANGED, new PlayerStateChangedEventArgs(oldState, newState));
+        Global.Event.TriggerEvent(Global.Events.Player.POSITION_CHANGED, new PlayerStateChangedEventArgs(oldState, newState));
     }
 
     /// <summary>
@@ -992,7 +992,7 @@ public class PlayerSystem : BaseGameSystem
         _playerData.totalDeaths++;
 
         // 触发死亡事件
-        Global.TriggerEvent(Global.Events.Player.DEATH, new PlayerDeathEventArgs(_playerData));
+        Global.Event.TriggerEvent(Global.Events.Player.DEATH, new PlayerDeathEventArgs(_playerData));
     }
 
     /// <summary>
@@ -1014,7 +1014,7 @@ public class PlayerSystem : BaseGameSystem
             LogDebug($"玩家升级: {oldLevel} -> {newLevel}");
 
             // 触发升级事件
-            Global.TriggerEvent(Global.Events.Player.LEVEL_UP, new PlayerLevelUpEventArgs(oldLevel, newLevel));
+            Global.Event.TriggerEvent(Global.Events.Player.LEVEL_UP, new PlayerLevelUpEventArgs(oldLevel, newLevel));
         }
     }
 

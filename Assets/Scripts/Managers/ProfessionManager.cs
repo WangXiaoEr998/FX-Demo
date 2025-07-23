@@ -142,7 +142,7 @@ public class ProfessionManager : MonoBehaviour
         LogDebug($"设置职业: {profession}");
         
         // 触发职业改变事件
-        Global.TriggerEvent(Global.Events.Player.PROFESSION_CHANGED,
+        Global.Event.TriggerEvent(Global.Events.Player.PROFESSION_CHANGED,
             new ProfessionChangedEventArgs(oldProfession, profession));
     }
 
@@ -181,7 +181,7 @@ public class ProfessionManager : MonoBehaviour
         ApplyProfessionEffects(profession);
         
         // 触发职业改变事件
-        Global.TriggerEvent(Global.Events.Player.PROFESSION_CHANGED,
+        Global.Event.TriggerEvent(Global.Events.Player.PROFESSION_CHANGED,
             new ProfessionChangedEventArgs(oldProfession, profession));
         
         return true;
@@ -241,7 +241,7 @@ public class ProfessionManager : MonoBehaviour
         CheckProfessionLevelUp(profession, oldLevel);
         
         // 触发经验变化事件
-        Global.TriggerEvent(Global.Events.Player.EXPERIENCE_GAINED,
+        Global.Event.TriggerEvent(Global.Events.Player.EXPERIENCE_GAINED,
             new { profession, experienceGain = experience, totalExperience = _professionExperience[profession] });
     }
 
@@ -364,8 +364,8 @@ public class ProfessionManager : MonoBehaviour
     {
         LogDebug("注册职业管理器事件");
         
-        Global.RegisterEvent(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.RegisterEvent(Global.Events.Skill.LEARNED, OnSkillLearned);
+        Global.Event.Register<ProfessionLevelUpEventArgs>(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.Register<SkillLearnedEventArgs>(Global.Events.Skill.LEARNED, OnSkillLearned);
     }
 
     /// <summary>
@@ -375,8 +375,8 @@ public class ProfessionManager : MonoBehaviour
     {
         LogDebug("注销职业管理器事件");
         
-        Global.UnregisterEvent(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
-        Global.UnregisterEvent(Global.Events.Skill.LEARNED, OnSkillLearned);
+        Global.Event.UnRegister<ProfessionLevelUpEventArgs>(Global.Events.Player.LEVEL_UP, OnPlayerLevelUp);
+        Global.Event.UnRegister<SkillLearnedEventArgs>(Global.Events.Skill.LEARNED, OnSkillLearned);
     }
     #endregion
 
@@ -472,7 +472,7 @@ public class ProfessionManager : MonoBehaviour
             LogDebug($"{profession}职业升级: {oldLevel} -> {newLevel}");
             
             // 触发职业升级事件
-            Global.TriggerEvent(Global.Events.Player.LEVEL_UP,
+            Global.Event.TriggerEvent(Global.Events.Player.LEVEL_UP,
                 new ProfessionLevelUpEventArgs(profession, oldLevel, newLevel));
         }
     }
@@ -506,8 +506,7 @@ public class ProfessionManager : MonoBehaviour
     /// <summary>
     /// 玩家升级事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnPlayerLevelUp(object eventArgs)
+    private void OnPlayerLevelUp(ProfessionLevelUpEventArgs args)
     {
         LogDebug("处理玩家升级事件");
         
@@ -517,8 +516,7 @@ public class ProfessionManager : MonoBehaviour
     /// <summary>
     /// 技能学习事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnSkillLearned(object eventArgs)
+    private void OnSkillLearned(SkillLearnedEventArgs args)
     {
         LogDebug("处理技能学习事件");
         

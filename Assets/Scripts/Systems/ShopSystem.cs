@@ -213,7 +213,7 @@ public class ShopSystem : BaseGameSystem
         LogDebug($"创建商店: {shopName} (ID: {shop.shopId})");
         
         // 触发商店创建事件
-        Global.TriggerEvent(Global.Events.Shop.CREATED, 
+        Global.Event.TriggerEvent(Global.Events.Shop.CREATED, 
             new ShopCreatedEventArgs(shop.shopId, shopName, ownerName));
 
         return shop;
@@ -246,7 +246,7 @@ public class ShopSystem : BaseGameSystem
         LogDebug($"关闭商店: {shop.shopName} (ID: {shopId})");
         
         // 触发商店关闭事件
-        Global.TriggerEvent(Global.Events.Shop.CLOSED, 
+        Global.Event.TriggerEvent(Global.Events.Shop.CLOSED, 
             new ShopClosedEventArgs(shopId, shop.shopName));
 
         return true;
@@ -326,7 +326,7 @@ public class ShopSystem : BaseGameSystem
         LogDebug($"向商店 {shop.shopName} 添加物品: {item.itemName} x{item.quantity}");
         
         // 触发物品添加事件
-        Global.TriggerEvent(Global.Events.Shop.ITEM_ADDED, 
+        Global.Event.TriggerEvent(Global.Events.Shop.ITEM_ADDED, 
             new ShopItemAddedEventArgs(shopId, item.itemId, item.quantity));
 
         return true;
@@ -370,7 +370,7 @@ public class ShopSystem : BaseGameSystem
         LogDebug($"从商店 {shop.shopName} 移除物品: {item.itemName} x{quantity}");
         
         // 触发物品移除事件
-        Global.TriggerEvent(Global.Events.Shop.ITEM_REMOVED, 
+        Global.Event.TriggerEvent(Global.Events.Shop.ITEM_REMOVED, 
             new ShopItemRemovedEventArgs(shopId, itemId, quantity));
 
         return true;
@@ -407,8 +407,8 @@ public class ShopSystem : BaseGameSystem
     private void RegisterEventListeners()
     {
         // 注册相关事件监听器
-        Global.RegisterEvent(Global.Events.Economy.ITEM_BOUGHT, OnItemBought);
-        Global.RegisterEvent(Global.Events.Economy.GOLD_GAINED, OnGoldGained);
+        Global.Event.Register(Global.Events.Economy.ITEM_BOUGHT, OnItemBought);
+        Global.Event.Register(Global.Events.Economy.GOLD_GAINED, OnGoldGained);
     }
 
     /// <summary>
@@ -475,7 +475,7 @@ public class ShopSystem : BaseGameSystem
         LogDebug($"商店 {shop.shopName} 租赁到期");
 
         // 触发租赁到期事件
-        Global.TriggerEvent(Global.Events.Shop.RENT_EXPIRED,
+        Global.Event.TriggerEvent(Global.Events.Shop.RENT_EXPIRED,
             new ShopRentExpiredEventArgs(shop.shopId, shop.shopName));
 
         // 关闭商店
@@ -528,8 +528,7 @@ public class ShopSystem : BaseGameSystem
     /// <summary>
     /// 物品购买事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnItemBought(object eventArgs)
+    private void OnItemBought()
     {
         // 处理物品购买事件
         LogDebug("处理物品购买事件");
@@ -538,8 +537,7 @@ public class ShopSystem : BaseGameSystem
     /// <summary>
     /// 金币获得事件处理
     /// </summary>
-    /// <param name="eventArgs">事件参数</param>
-    private void OnGoldGained(object eventArgs)
+    private void OnGoldGained()
     {
         // 处理金币获得事件
         LogDebug("处理金币获得事件");

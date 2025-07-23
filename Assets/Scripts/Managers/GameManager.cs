@@ -118,7 +118,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
         
         // 触发暂停事件
-        Global.TriggerEvent(Global.Events.Game.PAUSED);
+        Global.Event.TriggerEvent(Global.Events.Game.PAUSED);
         
         if (_enableDebugMode)
         {
@@ -137,7 +137,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         
         // 触发恢复事件
-        Global.TriggerEvent(Global.Events.Game.RESUMED);
+        Global.Event.TriggerEvent(Global.Events.Game.RESUMED);
         
         if (_enableDebugMode)
         {
@@ -289,7 +289,7 @@ public class GameManager : MonoBehaviour
         }
         
         // 触发状态改变事件
-        Global.TriggerEvent(Global.Events.Game.STATE_CHANGED, new GameStateEventArgs(previousState, newState));
+        Global.Event.TriggerEvent(Global.Events.Game.STATE_CHANGED, new GameStateEventArgs(previousState, newState));
     }
 
     private void HandleMainMenuState()

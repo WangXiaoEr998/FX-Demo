@@ -159,7 +159,7 @@ public class SystemManager : MonoBehaviour
         _systemsInitialized = true;
         
         // 触发系统初始化完成事件
-        Global.TriggerEvent(Global.Events.System.INITIALIZED);
+        Global.Event.TriggerEvent(Global.Events.System.INITIALIZED);
         
         if (_enableDebugMode)
         {
@@ -209,7 +209,7 @@ public class SystemManager : MonoBehaviour
         _systemsStarted = true;
         
         // 触发系统启动完成事件
-        Global.TriggerEvent(Global.Events.System.STARTED);
+        Global.Event.TriggerEvent(Global.Events.System.STARTED);
         
         if (_enableDebugMode)
         {
@@ -249,7 +249,7 @@ public class SystemManager : MonoBehaviour
         _systemsInitialized = false;
         
         // 触发系统关闭完成事件
-        Global.TriggerEvent(Global.Events.System.SHUTDOWN);
+        Global.Event.TriggerEvent(Global.Events.System.SHUTDOWN);
         
         if (_enableDebugMode)
         {
