@@ -5,36 +5,11 @@ using FanXing.Data;
 
 /// <summary>
 /// 数据管理器，负责游戏数据的保存、加载、配置管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，徐锵
+/// 创建时间：2025-07-24
 /// </summary>
-public class DataManager : MonoBehaviour
+public class DataManager : SingletonMono<DataManager>
 {
-    #region 单例模式
-
-    private static DataManager _instance;
-
-    public static DataManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<DataManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("DataManager");
-                    _instance = go.AddComponent<DataManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-
-            return _instance;
-        }
-    }
-
-    #endregion
-
     #region 字段定义
 
     [Header("数据配置")] [SerializeField] private string _saveFileName = "gamedata.json";
@@ -74,18 +49,9 @@ public class DataManager : MonoBehaviour
 
     #region Unity生命周期
 
-    private void Awake()
+    protected override void Awake()
     {
-        // 确保单例唯一性
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        _instance = this;
-        DontDestroyOnLoad(gameObject);
-
+        base.Awake();
         InitializeDataManager();
     }
 

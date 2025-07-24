@@ -4,48 +4,46 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 事件管理器，负责全局事件的注册、触发、注销和管理 最多可支持4个参数泛型 
-/// 作者：容泳森
-/// 修改时间：2025-07-22
+/// 作者：容泳森，徐锵
+/// 修改时间：2025-07-24
 /// </summary>
-public class EventManager
+public class EventManager : SingletonMono<EventManager>
 {
-    private static EventManager _instance;
-    public static EventManager Instance => _instance ??= new EventManager();
     private readonly Dictionary<string, List<Delegate>> _eventDelegatesDic = new();
 
     #region RegisterEvent/注册监听事件
 
-    public  void Register(string eventType, Action callback)
+    public void Register(string eventType, Action callback)
     {
         Delegate d = callback;
         Register(eventType, d);
     }
 
-    public  void Register<T>(string eventType, Action<T> callback)
+    public void Register<T>(string eventType, Action<T> callback)
     {
         Delegate d = callback;
         Register(eventType, d);
     }
 
-    public  void Register<T, T2>(string eventType, Action<T, T2> callback)
+    public void Register<T, T2>(string eventType, Action<T, T2> callback)
     {
         Delegate d = callback;
         Register(eventType, d);
     }
 
-    public  void Register<T, T2, T3>(string eventType, Action<T, T2, T3> callback)
+    public void Register<T, T2, T3>(string eventType, Action<T, T2, T3> callback)
     {
         Delegate d = callback;
         Register(eventType, d);
     }
 
-    public  void Register<T, T2, T3, T4>(string eventType, Action<T, T2, T3, T4> callback)
+    public void Register<T, T2, T3, T4>(string eventType, Action<T, T2, T3, T4> callback)
     {
         Delegate d = callback;
         Register(eventType, d);
     }
 
-    private  void Register(string eventType, Delegate callback)
+    private void Register(string eventType, Delegate callback)
     {
         if (_eventDelegatesDic.TryGetValue(eventType, out var delegates))
         {
@@ -67,37 +65,37 @@ public class EventManager
 
     #region UnRegisterEvent/注销事件监听
 
-    public  void UnRegister(string eventType, Action callback)
+    public void UnRegister(string eventType, Action callback)
     {
         Delegate d = callback;
         UnRegister(eventType, d);
     }
 
-    public  void UnRegister<T>(string eventType, Action<T> callback)
+    public void UnRegister<T>(string eventType, Action<T> callback)
     {
         Delegate d = callback;
         UnRegister(eventType, d);
     }
 
-    public  void UnRegister<T, T2>(string eventType, Action<T, T2> callback)
+    public void UnRegister<T, T2>(string eventType, Action<T, T2> callback)
     {
         Delegate d = callback;
         UnRegister(eventType, d);
     }
 
-    public  void UnRegister<T, T2, T3>(string eventType, Action<T, T2, T3> callback)
+    public void UnRegister<T, T2, T3>(string eventType, Action<T, T2, T3> callback)
     {
         Delegate d = callback;
         UnRegister(eventType, d);
     }
 
-    public  void UnRegister<T, T2, T3, T4>(string eventType, Action<T, T2, T3, T4> callback)
+    public void UnRegister<T, T2, T3, T4>(string eventType, Action<T, T2, T3, T4> callback)
     {
         Delegate d = callback;
         UnRegister(eventType, d);
     }
 
-    private  void UnRegister(string eventType, Delegate callback)
+    private void UnRegister(string eventType, Delegate callback)
     {
         if (_eventDelegatesDic.TryGetValue(eventType, out var delegates))
         {
@@ -112,32 +110,32 @@ public class EventManager
 
     #region TriggerEvent/事件发送
 
-    public  void TriggerEvent(string eventType)
+    public void TriggerEvent(string eventType)
     {
         TriggerEvent(eventType, action => { ((Action)action)(); });
     }
 
-    public  void TriggerEvent<T>(string eventType, T data)
+    public void TriggerEvent<T>(string eventType, T data)
     {
         TriggerEvent(eventType, action => { ((Action<T>)action)(data); });
     }
 
-    public  void TriggerEvent<T, T2>(string eventType, T data, T2 data2)
+    public void TriggerEvent<T, T2>(string eventType, T data, T2 data2)
     {
         TriggerEvent(eventType, action => { ((Action<T, T2>)action)(data, data2); });
     }
 
-    public  void TriggerEvent<T, T2, T3>(string eventType, T data, T2 data2, T3 data3)
+    public void TriggerEvent<T, T2, T3>(string eventType, T data, T2 data2, T3 data3)
     {
         TriggerEvent(eventType, action => { ((Action<T, T2, T3>)action)(data, data2, data3); });
     }
 
-    public  void TriggerEvent<T, T2, T3, T4>(string eventType, T data, T2 data2, T3 data3, T4 data4)
+    public void TriggerEvent<T, T2, T3, T4>(string eventType, T data, T2 data2, T3 data3, T4 data4)
     {
         TriggerEvent(eventType, action => { ((Action<T, T2, T3, T4>)action)(data, data2, data3, data4); });
     }
 
-    private  void TriggerEvent(string eventType, Action<Delegate> foreachAction, bool isQueue = false)
+    private void TriggerEvent(string eventType, Action<Delegate> foreachAction, bool isQueue = false)
     {
         if (_eventDelegatesDic.TryGetValue(eventType, out var delegates))
         {

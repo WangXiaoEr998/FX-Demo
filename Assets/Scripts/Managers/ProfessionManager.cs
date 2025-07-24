@@ -3,36 +3,11 @@ using System.Collections.Generic;
 using FanXing.Data;
 /// <summary>
 /// 职业管理器，负责玩家双职业系统的管理
-/// 作者：黄畅修,容泳森
-/// 修改时间：2025-07-23
+/// 作者：黄畅修,容泳森，徐锵
+/// 修改时间：2025-07-24
 /// </summary>
-public class ProfessionManager : MonoBehaviour
+public class ProfessionManager : SingletonMono<ProfessionManager>
 {
-    #region 单例模式
-    private static ProfessionManager _instance;
-
-    /// <summary>
-    /// 单例实例
-    /// </summary>
-    public static ProfessionManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<ProfessionManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("ProfessionManager");
-                    _instance = go.AddComponent<ProfessionManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("职业配置")]
     [SerializeField] private ProfessionConfig _merchantConfig;
@@ -79,6 +54,13 @@ public class ProfessionManager : MonoBehaviour
     /// 修士经验
     /// </summary>
     public int CultivatorExperience => GetProfessionExperience(ProfessionType.Cultivator);
+    #endregion
+
+    #region Unity生命周期
+    private void OnDestroy()
+    {
+        UnregisterEvents();
+    }
     #endregion
 
     #region 公共方法 - 初始化
@@ -553,13 +535,6 @@ public class ProfessionManager : MonoBehaviour
     private void LogError(string message)
     {
         Debug.LogError($"[ProfessionManager] {message}");
-    }
-    #endregion
-
-    #region Unity生命周期
-    private void OnDestroy()
-    {
-        UnregisterEvents();
     }
     #endregion
 }

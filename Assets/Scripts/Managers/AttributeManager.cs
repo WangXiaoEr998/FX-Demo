@@ -4,36 +4,11 @@ using FanXing.Data;
 
 /// <summary>
 /// 属性管理器，负责玩家属性系统的管理
-/// 作者：黄畅修，容泳森
-/// 修改时间：2025-07-23
+/// 作者：黄畅修，容泳森，徐锵
+/// 修改时间：2025-07-24
 /// </summary>
-public class AttributeManager : MonoBehaviour
+public class AttributeManager : SingletonMono<AttributeManager>
 {
-    #region 单例模式
-    private static AttributeManager _instance;
-
-    /// <summary>
-    /// 单例实例
-    /// </summary>
-    public static AttributeManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<AttributeManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("AttributeManager");
-                    _instance = go.AddComponent<AttributeManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("属性配置")]
     [SerializeField] private bool _enableDebugMode = false;
@@ -83,6 +58,13 @@ public class AttributeManager : MonoBehaviour
     /// 临时加成
     /// </summary>
     public PlayerAttributes TemporaryBonus => _temporaryBonus;
+    #endregion
+
+    #region Unity生命周期
+    private void OnDestroy()
+    {
+        UnregisterEvents();
+    }
     #endregion
 
     #region 公共方法 - 初始化
@@ -653,13 +635,6 @@ public class AttributeManager : MonoBehaviour
     private void LogError(string message)
     {
         Debug.LogError($"[AttributeManager] {message}");
-    }
-    #endregion
-
-    #region Unity生命周期
-    private void OnDestroy()
-    {
-        UnregisterEvents();
     }
     #endregion
 }

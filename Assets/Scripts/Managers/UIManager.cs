@@ -2,32 +2,11 @@ using UnityEngine;
 using System.Collections.Generic;
 /// <summary>
 /// UI管理器，负责UI界面的显示、隐藏、切换和管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，徐锵
+/// 创建时间：2025-07-24
 /// </summary>
-public class UIManager : MonoBehaviour
+public class UIManager : SingletonMono<UIManager>
 {
-    #region 单例模式
-    private static UIManager _instance;
-    public static UIManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<UIManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("UIManager");
-                    _instance = go.AddComponent<UIManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("UI根节点")]
     [SerializeField] private Canvas _mainCanvas;
@@ -65,18 +44,9 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region Unity生命周期
-    private void Awake()
+    protected override void Awake()
     {
-        // 确保单例唯一性
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        
-        _instance = this;
-        DontDestroyOnLoad(gameObject);
-        
+        base.Awake();
         InitializeUI();
     }
 

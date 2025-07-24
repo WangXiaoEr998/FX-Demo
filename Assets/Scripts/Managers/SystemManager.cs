@@ -3,32 +3,11 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 系统管理器，负责游戏各个子系统的初始化、更新和管理
-/// 作者：黄畅修，容泳森
-/// 修改时间：2025-07-23
+/// 作者：黄畅修，容泳森，徐锵
+/// 修改时间：2025-07-24
 /// </summary>
-public class SystemManager : MonoBehaviour
+public class SystemManager : SingletonMono<SystemManager>
 {
-    #region 单例模式
-    private static SystemManager _instance;
-    public static SystemManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<SystemManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("SystemManager");
-                    _instance = go.AddComponent<SystemManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("系统配置")]
     [SerializeField] private bool _enableDebugMode = false;
@@ -70,18 +49,9 @@ public class SystemManager : MonoBehaviour
     #endregion
 
     #region Unity生命周期
-    private void Awake()
+    protected override void Awake()
     {
-        // 确保单例唯一性
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        
-        _instance = this;
-        DontDestroyOnLoad(gameObject);
-        
+        base.Awake();
         if (_autoInitializeSystems)
         {
             InitializeSystems();

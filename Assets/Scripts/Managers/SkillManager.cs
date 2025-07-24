@@ -4,36 +4,11 @@ using System.Linq;
 using FanXing.Data;
 /// <summary>
 /// 技能管理器，负责玩家技能系统的管理
-/// 作者：黄畅修，容泳森
-/// 修改时间：2025-07-23
+/// 作者：黄畅修，容泳森，徐锵
+/// 修改时间：2025-07-24
 /// </summary>
-public class SkillManager : MonoBehaviour
+public class SkillManager : SingletonMono<SkillManager>
 {
-    #region 单例模式
-    private static SkillManager _instance;
-
-    /// <summary>
-    /// 单例实例
-    /// </summary>
-    public static SkillManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<SkillManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("SkillManager");
-                    _instance = go.AddComponent<SkillManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("技能配置")]
     [SerializeField] private SkillConfig _skillConfig;
@@ -69,6 +44,13 @@ public class SkillManager : MonoBehaviour
     /// 最大激活技能数量
     /// </summary>
     public int MaxActiveSkills => _skillConfig?.maxActiveSkills ?? 10;
+    #endregion
+
+    #region Unity生命周期
+    private void OnDestroy()
+    {
+        UnregisterEvents();
+    }
     #endregion
 
     #region 公共方法 - 初始化
@@ -909,13 +891,6 @@ public class SkillManager : MonoBehaviour
     private void LogError(string message)
     {
         Debug.LogError($"[SkillManager] {message}");
-    }
-    #endregion
-
-    #region Unity生命周期
-    private void OnDestroy()
-    {
-        UnregisterEvents();
     }
     #endregion
 }
