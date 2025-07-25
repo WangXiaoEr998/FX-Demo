@@ -3,7 +3,7 @@ using FanXing.Data;
 /// <summary>
 /// 游戏总控制器，负责游戏状态管理、场景切换、核心系统初始化
 /// 作者：黄畅修,容泳森，徐锵
-/// 修改时间：2025-07-24
+/// 修改时间：2025-07-25
 /// </summary>
 public class GameManager : SingletonMono<GameManager>
 {
@@ -265,25 +265,25 @@ public class GameManager : SingletonMono<GameManager>
     private void HandleMainMenuState()
     {
         // 主菜单状态处理
-        Global.UI?.ShowMainMenu();
+        Global.UI?.ShowUI(UIConst.MainMenu);
     }
 
     private void HandlePlayingState()
     {
         // 游戏进行状态处理
-        Global.UI?.ShowGameHUD();
+        Global.UI?.ShowUI(UIConst.GameHUD);
     }
 
     private void HandlePausedState()
     {
         // 暂停状态处理
-        Global.UI?.ShowPauseMenu();
+        Global.UI?.ShowUI(UIConst.PauseMenu);
     }
 
     private void HandleLoadingState()
     {
         // 加载状态处理
-        Global.UI?.ShowLoadingScreen();
+        Global.UI?.ShowUI(UIConst.LoadingScreen);
     }
 
     /// <summary>

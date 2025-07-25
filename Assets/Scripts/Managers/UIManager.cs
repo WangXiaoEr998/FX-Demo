@@ -165,38 +165,6 @@ public class UIManager : SingletonMono<UIManager>
     }
 
     /// <summary>
-    /// 显示主菜单
-    /// </summary>
-    public void ShowMainMenu()
-    {
-        ShowUI("MainMenu");
-    }
-
-    /// <summary>
-    /// 显示游戏HUD
-    /// </summary>
-    public void ShowGameHUD()
-    {
-        ShowUI("GameHUD");
-    }
-
-    /// <summary>
-    /// 显示暂停菜单
-    /// </summary>
-    public void ShowPauseMenu()
-    {
-        ShowUI("PauseMenu", false);
-    }
-
-    /// <summary>
-    /// 显示加载界面
-    /// </summary>
-    public void ShowLoadingScreen()
-    {
-        ShowUI("LoadingScreen");
-    }
-
-    /// <summary>
     /// 注册UI界面
     /// </summary>
     /// <param name="uiName">UI名称</param>
@@ -319,25 +287,25 @@ public class UIManager : SingletonMono<UIManager>
         if (_mainMenuPrefab != null)
         {
             GameObject mainMenu = Instantiate(_mainMenuPrefab, _uiRoot);
-            RegisterUI("MainMenu", mainMenu);
+            RegisterUI(UIConst.MainMenu, mainMenu);
         }
 
         if (_gameHUDPrefab != null)
         {
             GameObject gameHUD = Instantiate(_gameHUDPrefab, _uiRoot);
-            RegisterUI("GameHUD", gameHUD);
+            RegisterUI(UIConst.GameHUD, gameHUD);
         }
 
         if (_pauseMenuPrefab != null)
         {
             GameObject pauseMenu = Instantiate(_pauseMenuPrefab, _uiRoot);
-            RegisterUI("PauseMenu", pauseMenu);
+            RegisterUI(UIConst.PauseMenu, pauseMenu);
         }
 
         if (_loadingScreenPrefab != null)
         {
             GameObject loadingScreen = Instantiate(_loadingScreenPrefab, _uiRoot);
-            RegisterUI("LoadingScreen", loadingScreen);
+            RegisterUI(UIConst.LoadingScreen, loadingScreen);
         }
 
         if (_enableDebugMode)
@@ -346,4 +314,12 @@ public class UIManager : SingletonMono<UIManager>
         }
     }
     #endregion
+}
+
+public static class UIConst
+{
+    public const string MainMenu = "MainMenu";
+    public const string GameHUD = "GameHUD";
+    public const string PauseMenu = "PauseMenu";
+    public const string LoadingScreen = "LoadingScreen";
 }

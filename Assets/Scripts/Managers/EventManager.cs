@@ -5,9 +5,9 @@ using System.Collections.Generic;
 /// <summary>
 /// 事件管理器，负责全局事件的注册、触发、注销和管理 最多可支持4个参数泛型 
 /// 作者：容泳森，徐锵
-/// 修改时间：2025-07-24
+/// 修改时间：2025-07-25
 /// </summary>
-public class EventManager : SingletonMono<EventManager>
+public class EventManager : Singleton<EventManager>
 {
     private readonly Dictionary<string, List<Delegate>> _eventDelegatesDic = new();
 

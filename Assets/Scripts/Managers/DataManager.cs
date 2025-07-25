@@ -6,7 +6,7 @@ using FanXing.Data;
 /// <summary>
 /// 数据管理器，负责游戏数据的保存、加载、配置管理
 /// 作者：黄畅修，徐锵
-/// 创建时间：2025-07-24
+/// 修改时间：2025-07-24
 /// </summary>
 public class DataManager : SingletonMono<DataManager>
 {
