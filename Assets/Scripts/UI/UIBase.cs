@@ -2,8 +2,8 @@ using UnityEngine;
 
 public abstract class UIBase : MonoBehaviour
 {
-    public virtual string Layer => UIConst.PauseMenu; // 默认在功能层，可被子类重写
-
+    public UIConst layer = UIConst.PauseMenu; // 默认在功能层，可被子类重写
+    public string uiName { get;  set; }
     public bool IsOpened { get; private set; }
 
     /// <summary>
@@ -47,5 +47,11 @@ public abstract class UIBase : MonoBehaviour
     {
         // 动画播放完调用 onComplete
         onComplete?.Invoke();
+    }
+    public void Hide()
+    {
+
+        UIManager.Instance.HideUI(uiName,false);
+
     }
 }

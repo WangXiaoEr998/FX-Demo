@@ -265,25 +265,25 @@ public class GameManager : SingletonMono<GameManager>
     private void HandleMainMenuState()
     {
         // 主菜单状态处理
-        Global.UI?.ShowUI(UIConst.MainMenu);
+        //Global.UI?.ShowUI(UIConst.MainMenu);
     }
 
     private void HandlePlayingState()
     {
         // 游戏进行状态处理
-        Global.UI?.ShowUI(UIConst.GameHUD);
+        //Global.UI?.ShowUI(UIConst.GameHUD);
     }
 
     private void HandlePausedState()
     {
         // 暂停状态处理
-        Global.UI?.ShowUI(UIConst.PauseMenu);
+        //Global.UI?.ShowUI(UIConst.PauseMenu);
     }
 
     private void HandleLoadingState()
     {
         // 加载状态处理
-        Global.UI?.ShowUI(UIConst.LoadingScreen);
+       // Global.UI?.ShowUI(UIConst.LoadingScreen);
     }
 
     /// <summary>
