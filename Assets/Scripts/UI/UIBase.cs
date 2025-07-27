@@ -12,7 +12,7 @@ public abstract class UIBase : MonoBehaviour
     public virtual void OnOpen(object param = null)
     {
         IsOpened = true;
-        gameObject.SetActive(true);
+       // gameObject.SetActive(true);
     }
 
     /// <summary>
@@ -21,9 +21,22 @@ public abstract class UIBase : MonoBehaviour
     public virtual void OnClose()
     {
         IsOpened = false;
-        gameObject.SetActive(false);
+      //  gameObject.SetActive(false);
     }
+    public virtual void OnFocus()
+    {
 
+
+
+
+    }
+    public virtual void LoseFocus()
+    {
+
+
+
+
+    }
     /// <summary>
     /// 销毁前调用
     /// </summary>

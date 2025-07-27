@@ -98,6 +98,10 @@ public class UIManager : SingletonMono<UIManager>
         if (_uiPanels.ContainsKey(uiName))
         {
             _uiPanels[uiName].gameObject.SetActive(true);
+            if (_uiStack.Count > 0)
+            {
+                _uiPanels[_uiStack.Peek()].LoseFocus();
+            }
             _uiStack.Push(uiName);
             
             if (_enableDebugMode)
@@ -116,6 +120,10 @@ public class UIManager : SingletonMono<UIManager>
             GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/UIPrefab/{uiName}.prefab");
             if (go != null)
             {
+                if (_uiStack.Count > 0)
+                {
+                    _uiPanels[_uiStack.Peek()].LoseFocus();
+                }
                 _uiStack.Push(uiName);
                 GameObject insGo = Instantiate(go);
                 insGo.transform.SetParent(gameObject.transform);
@@ -222,11 +230,15 @@ public class UIManager : SingletonMono<UIManager>
 
                 _uiPanels[fName].gameObject.SetActive(true);
             }
- 
+            if (_uiStack.Count>0)
+            {
+                _uiPanels[_uiStack.Peek()].OnFocus();
+            }
             if (_enableDebugMode)
             {
                 Debug.Log($"隐藏UI界面: {uiName}");
             }
+            _uiPanels[uiName].OnClose();
             _layerMap[_uiPanels[uiName].layer]--;
             if (isDestroy)
             {

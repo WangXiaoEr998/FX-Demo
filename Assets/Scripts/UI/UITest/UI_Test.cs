@@ -17,4 +17,12 @@ public class UI_Test : UIBase
       
         Debug.Log("");
     }
+    public override void LoseFocus()
+    {
+        Debug.Log("失去焦点");
+    }
+    public override void OnFocus()
+    {
+        Debug.Log("获得焦点");
+    }
 }
