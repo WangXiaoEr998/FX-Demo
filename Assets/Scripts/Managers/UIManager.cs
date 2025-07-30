@@ -31,12 +31,12 @@ public class UIManager : SingletonMono<UIManager>
     public const string LoadingScreen = "LoadingScreen";
     // UI界面字典
     private Dictionary<string, UIBase> _uiPanels = new Dictionary<string, UIBase>();
-    private Dictionary<UIConst, int> _layerMap = new Dictionary<UIConst, int>()
+    private Dictionary<UILayerConst, int> _layerMap = new Dictionary<UILayerConst, int>()
     {
-        [UIConst.MainMenu] = 0,
-        [UIConst.GameHUD] = 100,
-        [UIConst.PauseMenu] = 200,
-        [UIConst.LoadingScreen] = 300,
+        [UILayerConst.Background] = 0,
+        [UILayerConst.GameHUD] = 100,
+        [UILayerConst.Panel] = 200,
+        [UILayerConst.PopUP] = 300,
 
     };
     private Stack<string> _uiStack = new Stack<string>();
@@ -478,10 +478,10 @@ public class UIManager : SingletonMono<UIManager>
     #endregion
 }
 
-public enum UIConst
+public enum UILayerConst
 {
-     MainMenu = 1,
+     Background = 1,
      GameHUD = 2,
-     PauseMenu = 3,
-     LoadingScreen = 4,
+     Panel = 3,
+     PopUP = 4,
 }
