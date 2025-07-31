@@ -173,6 +173,7 @@ public static class Global
             public const string INTERACTION_ENDED = EventConstants.NPC.INTERACTION_ENDED;
             public const string CREATED = EventConstants.NPC.CREATED;
             public const string DESTROYED = EventConstants.NPC.DESTROYED;
+            public const string INITIALIZE = EventConstants.NPC.INITIALIZE;
         }
 
         /// <summary>

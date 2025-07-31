@@ -43,6 +43,17 @@ namespace FanXing.Data
     }
 
     /// <summary>
+    /// NPC行为枚举
+    /// </summary>
+    public enum ActionType
+    {
+        /// <summary>
+        /// 对话
+        /// </summary>
+        DialogueAction,
+    }
+
+    /// <summary>
     /// 作物类型枚举
     /// </summary>
     public enum CropType
