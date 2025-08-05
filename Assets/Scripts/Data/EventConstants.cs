@@ -251,6 +251,12 @@ namespace FanXing.Data
             /// 参数类型：NPCDestroyedEventArgs
             /// </summary>
             public const string DESTROYED = "NPC.Destroyed";
+            
+            /// <summary>
+            /// NPC初始化事件
+            /// 参数类型：NPCDestroyedEventArgs
+            /// </summary>
+            public const string INITIALIZE = "NPC.Initialize";
         }
         #endregion
 

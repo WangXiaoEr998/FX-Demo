@@ -11,8 +11,7 @@ public class NPCSystem : BaseGameSystem
 {
     #region 字段定义
 
-    [Header("NPC系统配置")] 
-    [SerializeField] private int _maxNPCCount = 50;
+    [Header("NPC系统配置")] [SerializeField] private int _maxNPCCount = 50;
     [SerializeField] private float _npcUpdateInterval = 0.1f;
 #pragma warning disable CS0414 // 字段已赋值但从未使用 - Demo版本中暂未实现相关功能
     [SerializeField] private float _interactionRange = 3.0f;
@@ -26,6 +25,7 @@ public class NPCSystem : BaseGameSystem
     private Queue<GameObject> _npcPool = new Queue<GameObject>();
 
     // 对话系统
+    // 当前对话的NPC
     private GameObject _currentInteractingNPC;
     private bool _isInDialogue = false;
 
@@ -167,8 +167,8 @@ public class NPCSystem : BaseGameSystem
     /// <param name="npc">NPC对象</param>
     private void UpdateNPCBehavior(GameObject npc)
     {
-        // TODO: 实现NPC行为逻辑
-        // 例如：巡逻、对话检测、状态更新等
+        // TODO: 实现NPC行为逻辑。例如：巡逻、对话检测、状态更新等
+        npc.GetComponent<NPC>().OnUpdate(_updateTimer);
     }
 
     /// <summary>
@@ -177,8 +177,7 @@ public class NPCSystem : BaseGameSystem
     /// <param name="fixedDeltaTime">固定时间增量</param>
     private void UpdateNPCPhysics(float fixedDeltaTime)
     {
-        // TODO: 实现NPC物理更新
-        // 例如：移动、碰撞检测等
+        // TODO: 实现NPC物理更新.例如：移动、碰撞检测等
     }
 
     /// <summary>
@@ -206,6 +205,7 @@ public class NPCSystem : BaseGameSystem
         {
             if (npc != null)
             {
+                npc.GetComponent<NPC>().OnDispose();
                 DestroyImmediate(npc);
             }
         }
@@ -230,10 +230,9 @@ public class NPCSystem : BaseGameSystem
     /// <summary>
     /// 创建NPC
     /// </summary>
-    /// <param name="npcType">NPC类型</param>
-    /// <param name="position">生成位置</param>
+    /// <param name="npcData">NPC数据</param>
     /// <returns>创建的NPC对象</returns>
-    public GameObject CreateNPC(NPCType npcType, Vector3 position)
+    public GameObject CreateNPCByData(NPCData npcData)
     {
         if (_activeNPCs.Count >= _maxNPCCount)
         {
@@ -241,19 +240,26 @@ public class NPCSystem : BaseGameSystem
             return null;
         }
 
+        if (npcData == null)
+        {
+            Debug.LogWarning("NPCData is Null");
+            return null;
+        }
+
         GameObject npc = GetNPCFromPool();
         if (npc != null)
         {
-            npc.transform.position = position;
+            npc.transform.position = npcData.position;
             npc.SetActive(true);
             _activeNPCs.Add(npc);
 
             if (_enableDebugMode)
             {
-                Debug.Log($"创建NPC: {npcType} 在位置 {position}");
+                Debug.Log($"创建NPC: {npcData.npcType} 在位置 {npcData.position}");
             }
         }
 
+        Global.Event.TriggerEvent(Global.Events.NPC.CREATED, npcData.npcName);
         return npc;
     }
 
