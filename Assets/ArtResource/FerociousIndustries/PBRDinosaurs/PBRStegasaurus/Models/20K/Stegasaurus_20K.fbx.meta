@@ -1,0 +1,147 @@
+fileFormatVersion: 2
+guid: 0f65eb0400553da4eafb6c938021d0b8
+ModelImporter:
+  serializedVersion: 20200
+  internalIDToNameTable:
+  - first:
+      74: -8334767384317503859
+    second: Armature|Stegasaurus_Death
+  - first:
+      74: 6660733111881349824
+    second: Armature|Stegasaurus_Drink
+  - first:
+      74: -4209643887786664899
+    second: Armature|Stegasaurus_Eat
+  - first:
+      74: -8018650132368902614
+    second: Armature|Stegasaurus_HurtA
+  - first:
+      74: -122498662266726895
+    second: Armature|Stegasaurus_HurtB
+  - first:
+      74: -8674533337362838893
+    second: Armature|Stegasaurus_IdleA
+  - first:
+      74: 6483279918667678403
+    second: Armature|Stegasaurus_IdleB
+  - first:
+      74: -6315895689191552753
+    second: Armature|Stegasaurus_KnockedDown
+  - first:
+      74: -6157482451543269629
+    second: Armature|Stegasaurus_Roar
+  - first:
+      74: -1792911586138707636
+    second: Armature|Stegasaurus_Run
+  - first:
+      74: -5042137475544103084
+    second: Armature|Stegasaurus_Run_RM
+  - first:
+      74: -8481004189238301107
+    second: Armature|Stegasaurus_Stomp
+  - first:
+      74: -9075445648877116774
+    second: Armature|Stegasaurus_TailWhip
+  - first:
+      74: 2890936037623971268
+    second: Armature|Stegasaurus_Walk
+  - first:
+      74: -4771679275087836630
+    second: Armature|Stegasaurus_Walk_RM
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 1
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: Root
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 1
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
