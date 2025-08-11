@@ -76,6 +76,7 @@ namespace FanXing.Editor
         #region GUI绘制
         protected override void OnGUI()
         {
+            base.OnGUI();
             DrawTitle("繁星Demo - 策划配置工具");
 
             // 绘制标签页
@@ -94,8 +95,8 @@ namespace FanXing.Editor
             }
         }
         #endregion
-
         #region NPC配置
+        private string _npcIdInput = "1";
         private void DrawNPCConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -147,8 +148,20 @@ namespace FanXing.Editor
         private void DrawNPCDetails()
         {
             DrawHeader("NPC详细配置");
+            _npcIdInput = EditorGUILayout.TextField(
+                new GUIContent("NPC ID", "请输入正整数作为NPC的唯一标识"),
+                _npcIdInput
+            );
 
-            _selectedNPC.npcId = EditorGUILayout.IntField("NPC ID", _selectedNPC.npcId);
+            bool npcIdValid = int.TryParse(_npcIdInput, out int parsedId) && parsedId > 0;
+            if (!npcIdValid)
+            {
+                EditorGUILayout.HelpBox("NPC ID 必须是正整数！", MessageType.Error);
+            }
+            else
+            {
+                _selectedNPC.npcId = parsedId;
+            }
             _selectedNPC.npcName = EditorGUILayout.TextField("NPC名称", _selectedNPC.npcName);
             _selectedNPC.npcType = (NPCType)EditorGUILayout.EnumPopup("NPC类型", _selectedNPC.npcType);
             _selectedNPC.dialogueText = EditorGUILayout.TextArea(_selectedNPC.dialogueText, GUILayout.Height(60));
@@ -157,14 +170,24 @@ namespace FanXing.Editor
 
             EditorGUILayout.Space(10);
             DrawButtonGroup(
-                ("保存配置", () =>
-                {
-                    if (ValidateNPCData(_selectedNPC))
-                    {
-                        SaveNPCConfigs();
-                    }
-                }
-            ),
+                 ("保存配置", () =>
+                 {
+                     // 校验 NPC ID 必须是纯数字
+                     if (!int.TryParse(_npcIdInput, out int parsedId) || parsedId <= 0)
+                     {
+                         EditorUtility.DisplayDialog("错误", "NPC ID 必须是正整数！", "确定");
+                         return;
+                     }
+
+                     // 赋值给 NPC
+                     _selectedNPC.npcId = parsedId;
+
+                     if (ValidateNPCData(_selectedNPC))
+                     {
+                         SaveNPCConfigs();
+                     }
+                 }
+                ),
                 ("导出JSON", () => ExportJsonConfig(_npcConfigs, "npc_config"))
             );
         }
@@ -206,6 +229,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 任务配置
+        private string _questIdInput = "1";
         private void DrawQuestConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -249,7 +273,20 @@ namespace FanXing.Editor
         private void DrawQuestDetails()
         {
             DrawHeader("任务详细配置");
-            _selectedQuest.questId = EditorGUILayout.IntField("任务 ID", _selectedQuest.questId);
+            // 输入任务ID（文本框）
+            _questIdInput = EditorGUILayout.TextField(
+                new GUIContent("任务 ID", "请输入正整数作为任务的唯一标识"),
+                _questIdInput
+            );
+            bool questIdValid = int.TryParse(_questIdInput, out int parsedId) && parsedId > 0;
+            if (!questIdValid)
+            {
+                EditorGUILayout.HelpBox("任务 ID 必须是正整数！", MessageType.Error);
+            }
+            else
+            {
+                _selectedQuest.questId = parsedId;
+            }
             _selectedQuest.questName = EditorGUILayout.TextField("任务名称", _selectedQuest.questName);
             _selectedQuest.questType = (QuestType)EditorGUILayout.EnumPopup("任务类型", _selectedQuest.questType);
             _selectedQuest.description = EditorGUILayout.TextArea(_selectedQuest.description, GUILayout.Height(80));
@@ -260,6 +297,16 @@ namespace FanXing.Editor
             DrawButtonGroup(
              ("保存配置", () =>
              {
+                 // 校验任务ID必须是正整数
+                 if (!int.TryParse(_questIdInput, out int parsedId) || parsedId <= 0)
+                 {
+                     EditorUtility.DisplayDialog("错误", "任务 ID 必须是正整数！", "确定");
+                     return;
+                 }
+
+                 // 赋值给任务
+                 _selectedQuest.questId = parsedId;
+
                  if (ValidateQuestData(_selectedQuest))
                  {
                      SaveQuestConfigs();
@@ -304,6 +351,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 商店配置
+        private string _shopIdInput = "1";
         private void DrawShopConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -347,7 +395,19 @@ namespace FanXing.Editor
         private void DrawShopDetails()
         {
             DrawHeader("商品详细配置");
-            _selectedShop.shopId = EditorGUILayout.IntField("商品 ID", _selectedShop.shopId);
+            _shopIdInput = EditorGUILayout.TextField(
+                new GUIContent("商品 ID", "请输入正整数作为商品的唯一标识"),
+                _shopIdInput
+            );
+            bool shopIdValid = int.TryParse(_shopIdInput, out int parsedId) && parsedId > 0;
+            if (!shopIdValid)
+            {
+                EditorGUILayout.HelpBox("商店 ID 必须是正整数！", MessageType.Error);
+            }
+            else
+            {
+                _selectedShop.shopId = parsedId;
+            }
             _selectedShop.shopName = EditorGUILayout.TextField("商品名称", _selectedShop.shopName);
             _selectedShop.shopType = (ShopType)EditorGUILayout.EnumPopup("商品类型", _selectedShop.shopType);
             _selectedShop.rentCost = EditorGUILayout.IntField("商品价格", _selectedShop.rentCost);
@@ -357,6 +417,15 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
+                    // 校验商品ID
+                    if (!int.TryParse(_shopIdInput, out int parsedId) || parsedId <= 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "商品 ID 必须是正整数！", "确定");
+                        return;
+                    }
+
+                    _selectedShop.shopId = parsedId;
+
                     if (ValidateShopData(_selectedShop))
                     {
                         SaveShopConfigs();
@@ -400,6 +469,8 @@ namespace FanXing.Editor
         #endregion
 
         #region 作物配置
+
+        private string _cropIdInput = "1";
         private void DrawCropConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -441,7 +512,19 @@ namespace FanXing.Editor
         private void DrawCropDetails()
         {
             DrawHeader("作物详情配置");
-            _selectedCrop.cropId = EditorGUILayout.IntField("作物 ID", _selectedCrop.cropId);
+            _cropIdInput = EditorGUILayout.TextField(
+                new GUIContent("作物 ID", "请输入正整数作为作物的唯一标识"),
+                _cropIdInput
+            );
+            bool cropIdValid = int.TryParse(_cropIdInput, out int parsedId) && parsedId > 0;
+            if (!cropIdValid)
+            {
+                EditorGUILayout.HelpBox("作物 ID 必须是正整数！", MessageType.Error);
+            }
+            else
+            {
+                _selectedCrop.cropId = parsedId;
+            }
             _selectedCrop.cropName = EditorGUILayout.TextField("作物名称", _selectedCrop.cropName);
             _selectedCrop.cropType = (CropType)EditorGUILayout.EnumPopup("作物类型", _selectedCrop.cropType);
             _selectedCrop.growthTime = EditorGUILayout.FloatField("作物生长时间", _selectedCrop.growthTime);
@@ -451,6 +534,15 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
+                    // 校验作物 ID
+                    if (!int.TryParse(_cropIdInput, out int parsedId) || parsedId <= 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "作物 ID 必须是正整数！", "确定");
+                        return;
+                    }
+
+                    _selectedCrop.cropId = parsedId;
+
                     if (ValidateCropData(_selectedCrop))
                     {
                         SaveCropConfigs();
@@ -494,6 +586,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 技能配置
+        private string _skillIdInput = "1";
         private void DrawSkillConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -536,7 +629,19 @@ namespace FanXing.Editor
         private void DrawSkillDetails()
         {
             DrawHeader("技能详细配置");
-            _selectedSkill.skillId = EditorGUILayout.IntField("技能 ID", _selectedSkill.skillId);
+            _skillIdInput = EditorGUILayout.TextField(
+                new GUIContent("技能 ID", "请输入正整数作为作物的唯一标识"),
+                _skillIdInput
+            );
+            bool skillIdValid = int.TryParse(_skillIdInput, out int parsedId) && parsedId > 0;
+            if (!skillIdValid)
+            {
+                EditorGUILayout.HelpBox("技能 ID 必须是正整数！", MessageType.Error);
+            }
+            else
+            {
+                _selectedSkill.skillId = parsedId;
+            }
             _selectedSkill.skillName = EditorGUILayout.TextField("技能名称", _selectedSkill.skillName);
             _selectedSkill.skillType = (SkillType)EditorGUILayout.EnumPopup("技能类型", _selectedSkill.skillType);
             _selectedSkill.manaCost = EditorGUILayout.IntField("技能消耗", _selectedSkill.manaCost);
@@ -545,6 +650,15 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
+                    // 校验技能 ID
+                    if (!int.TryParse(_skillIdInput, out int parsedId) || parsedId <= 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "技能 ID 必须是正整数！", "确定");
+                        return;
+                    }
+
+                    _selectedSkill.skillId = parsedId;
+
                     if (ValidateSkillData(_selectedSkill))
                     {
                         SaveSkillConfigs();
