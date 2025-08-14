@@ -95,8 +95,8 @@ namespace FanXing.Editor
             }
         }
         #endregion
+
         #region NPC配置
-        private string _npcIdInput = "1";
         private void DrawNPCConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -158,24 +158,14 @@ namespace FanXing.Editor
 
             EditorGUILayout.Space(10);
             DrawButtonGroup(
-                 ("保存配置", () =>
-                 {
-                     // 校验 NPC ID 必须是纯数字
-                     if (!int.TryParse(_npcIdInput, out int parsedId) || parsedId <= 0)
-                     {
-                         EditorUtility.DisplayDialog("错误", "NPC ID 必须是正整数！", "确定");
-                         return;
-                     }
-
-                     // 赋值给 NPC
-                     _selectedNPC.npcId = parsedId;
-
-                     if (ValidateNPCData(_selectedNPC))
-                     {
-                         SaveNPCConfigs();
-                     }
-                 }
-                ),
+                ("保存配置", () =>
+                {
+                    if (ValidateNPCData(_selectedNPC))
+                    {
+                        SaveNPCConfigs();
+                    }
+                }
+            ),
                 ("导出JSON", () => ExportJsonConfig(_npcConfigs, "npc_config"))
             );
         }
@@ -216,7 +206,6 @@ namespace FanXing.Editor
         #endregion
 
         #region 任务配置
-        private string _questIdInput = "1";
         private void DrawQuestConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -252,7 +241,7 @@ namespace FanXing.Editor
             else
             {
                 EditorGUI.indentLevel -= 17;
-                EditorGUILayout.LabelField("请选择一个任务进行编辑", EditorStyles.centeredGreyMiniLabel); // 用于显示灰色、居中、小号的辅助性文本标签
+                EditorGUILayout.LabelField("请选择一个任务进行编辑", EditorStyles.centeredGreyMiniLabel);
                 EditorGUI.indentLevel += 17;
             }
             EditorGUILayout.EndVertical();
@@ -273,16 +262,6 @@ namespace FanXing.Editor
             DrawButtonGroup(
              ("保存配置", () =>
              {
-                 // 校验任务ID必须是正整数
-                 if (!int.TryParse(_questIdInput, out int parsedId) || parsedId <= 0)
-                 {
-                     EditorUtility.DisplayDialog("错误", "任务 ID 必须是正整数！", "确定");
-                     return;
-                 }
-
-                 // 赋值给任务
-                 _selectedQuest.questId = parsedId;
-
                  if (ValidateQuestData(_selectedQuest))
                  {
                      SaveQuestConfigs();
@@ -327,7 +306,6 @@ namespace FanXing.Editor
         #endregion
 
         #region 商店配置
-        private string _shopIdInput = "1";
         private void DrawShopConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -383,15 +361,6 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    // 校验商品ID
-                    if (!int.TryParse(_shopIdInput, out int parsedId) || parsedId <= 0)
-                    {
-                        EditorUtility.DisplayDialog("错误", "商品 ID 必须是正整数！", "确定");
-                        return;
-                    }
-
-                    _selectedShop.shopId = parsedId;
-
                     if (ValidateShopData(_selectedShop))
                     {
                         SaveShopConfigs();
@@ -435,8 +404,6 @@ namespace FanXing.Editor
         #endregion
 
         #region 作物配置
-
-        private string _cropIdInput = "1";
         private void DrawCropConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -490,15 +457,6 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    // 校验作物 ID
-                    if (!int.TryParse(_cropIdInput, out int parsedId) || parsedId <= 0)
-                    {
-                        EditorUtility.DisplayDialog("错误", "作物 ID 必须是正整数！", "确定");
-                        return;
-                    }
-
-                    _selectedCrop.cropId = parsedId;
-
                     if (ValidateCropData(_selectedCrop))
                     {
                         SaveCropConfigs();
@@ -542,7 +500,6 @@ namespace FanXing.Editor
         #endregion
 
         #region 技能配置
-        private string _skillIdInput = "1";
         private void DrawSkillConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -561,7 +518,7 @@ namespace FanXing.Editor
                 GUI.backgroundColor = isSelected ? Color.cyan : Color.white;
                 if (GUILayout.Button($"{_skillConfigs[i].skillName}(ID:{_skillConfigs[i].skillId})", GUILayout.Height(25)))
                 {
-                    _selectedSkillIndex = i;
+                    _selectedSkillIndex = i; 
                     _selectedSkill = _skillConfigs[i];
                 }
                 GUI.backgroundColor = Color.white;
@@ -596,15 +553,6 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    // 校验技能 ID
-                    if (!int.TryParse(_skillIdInput, out int parsedId) || parsedId <= 0)
-                    {
-                        EditorUtility.DisplayDialog("错误", "技能 ID 必须是正整数！", "确定");
-                        return;
-                    }
-
-                    _selectedSkill.skillId = parsedId;
-
                     if (ValidateSkillData(_selectedSkill))
                     {
                         SaveSkillConfigs();
@@ -705,7 +653,7 @@ namespace FanXing.Editor
                 ShowErrorMessage("NPC ID必须大于0");
                 return false;
             }
-            if (_npcConfigs.Any(n => n.npcId == data.npcId && n != data))
+            if(_npcConfigs.Any(n => n.npcId == data.npcId && n != data))
             {
                 ShowErrorMessage("NPC ID必须唯一");
                 return false;
@@ -722,7 +670,7 @@ namespace FanXing.Editor
         {
             if (data == null)
                 return;
-            string npcIdInput = EditorGUILayout.TextField("NPC Id", data.npcId.ToString());
+            string npcIdInput = EditorGUILayout.TextField("NPC Id",data.npcId.ToString());
             if (int.TryParse(npcIdInput, out int newId) && newId > 0)
                 data.npcId = newId;
             else
@@ -735,7 +683,7 @@ namespace FanXing.Editor
                 ShowErrorMessage("任务 ID必须大于0");
                 return false;
             }
-            if (_questConfigs.Any(q => q.questId == data.questId && q != data))
+            if(_questConfigs.Any(q => q.questId == data.questId && q != data))
             {
                 ShowErrorMessage("任务 ID必须唯一");
                 return false;
@@ -764,7 +712,7 @@ namespace FanXing.Editor
                 ShowErrorMessage("商品 ID必须大于0");
                 return false;
             }
-            if (_shopConfigs.Any(s => s.shopId == data.shopId && s != data))
+            if(_shopConfigs.Any(s => s.shopId == data.shopId && s != data))
             {
                 ShowErrorMessage("商品 ID必须唯一");
                 return false;
@@ -793,7 +741,7 @@ namespace FanXing.Editor
                 ShowErrorMessage("作物 ID必须大于0");
                 return false;
             }
-            if (_cropConfigs.Any(c => c.cropId == data.cropId && c != data))
+            if(_cropConfigs.Any(c => c.cropId == data.cropId && c != data))
             {
                 ShowErrorMessage("作物 ID必须唯一");
                 return false;
@@ -822,7 +770,7 @@ namespace FanXing.Editor
                 ShowErrorMessage("技能 ID必须大于0");
                 return false;
             }
-            if (_skillConfigs.Any(s => s.skillId == data.skillId && s != data))
+            if(_skillConfigs.Any(s => s.skillId == data.skillId && s != data))
             {
                 ShowErrorMessage("技能 ID必须唯一");
                 return false;
