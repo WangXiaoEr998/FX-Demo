@@ -95,8 +95,8 @@ namespace FanXing.Editor
             }
         }
         #endregion
-
         #region NPC配置
+        private string _npcIdInput = "1";
         private void DrawNPCConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -158,14 +158,24 @@ namespace FanXing.Editor
 
             EditorGUILayout.Space(10);
             DrawButtonGroup(
-                ("保存配置", () =>
-                {
-                    if (ValidateNPCData(_selectedNPC))
-                    {
-                        SaveNPCConfigs();
-                    }
-                }
-            ),
+                 ("保存配置", () =>
+                 {
+                     // 校验 NPC ID 必须是纯数字
+                     if (!int.TryParse(_npcIdInput, out int parsedId) || parsedId <= 0)
+                     {
+                         EditorUtility.DisplayDialog("错误", "NPC ID 必须是正整数！", "确定");
+                         return;
+                     }
+
+                     // 赋值给 NPC
+                     _selectedNPC.npcId = parsedId;
+
+                     if (ValidateNPCData(_selectedNPC))
+                     {
+                         SaveNPCConfigs();
+                     }
+                 }
+                ),
                 ("导出JSON", () => ExportJsonConfig(_npcConfigs, "npc_config"))
             );
         }
@@ -206,6 +216,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 任务配置
+        private string _questIdInput = "1";
         private void DrawQuestConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -262,6 +273,16 @@ namespace FanXing.Editor
             DrawButtonGroup(
              ("保存配置", () =>
              {
+                 // 校验任务ID必须是正整数
+                 if (!int.TryParse(_questIdInput, out int parsedId) || parsedId <= 0)
+                 {
+                     EditorUtility.DisplayDialog("错误", "任务 ID 必须是正整数！", "确定");
+                     return;
+                 }
+
+                 // 赋值给任务
+                 _selectedQuest.questId = parsedId;
+
                  if (ValidateQuestData(_selectedQuest))
                  {
                      SaveQuestConfigs();
@@ -306,6 +327,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 商店配置
+        private string _shopIdInput = "1";
         private void DrawShopConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -361,6 +383,15 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
+                    // 校验商品ID
+                    if (!int.TryParse(_shopIdInput, out int parsedId) || parsedId <= 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "商品 ID 必须是正整数！", "确定");
+                        return;
+                    }
+
+                    _selectedShop.shopId = parsedId;
+
                     if (ValidateShopData(_selectedShop))
                     {
                         SaveShopConfigs();
@@ -404,6 +435,8 @@ namespace FanXing.Editor
         #endregion
 
         #region 作物配置
+
+        private string _cropIdInput = "1";
         private void DrawCropConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -457,6 +490,15 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
+                    // 校验作物 ID
+                    if (!int.TryParse(_cropIdInput, out int parsedId) || parsedId <= 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "作物 ID 必须是正整数！", "确定");
+                        return;
+                    }
+
+                    _selectedCrop.cropId = parsedId;
+
                     if (ValidateCropData(_selectedCrop))
                     {
                         SaveCropConfigs();
@@ -500,6 +542,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 技能配置
+        private string _skillIdInput = "1";
         private void DrawSkillConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
@@ -553,6 +596,15 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
+                    // 校验技能 ID
+                    if (!int.TryParse(_skillIdInput, out int parsedId) || parsedId <= 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "技能 ID 必须是正整数！", "确定");
+                        return;
+                    }
+
+                    _selectedSkill.skillId = parsedId;
+
                     if (ValidateSkillData(_selectedSkill))
                     {
                         SaveSkillConfigs();

@@ -29,7 +29,7 @@ namespace FanXing.Editor
         #region 生命周期
         protected virtual void OnEnable()
         {
-            InitializeStyles();
+            //InitializeStyles();
             LoadData();
         }
 
@@ -53,7 +53,15 @@ namespace FanXing.Editor
         /// <summary>
         /// 绘制GUI
         /// </summary>
-        protected abstract void OnGUI();
+        private bool _stylesInitialized;
+        protected virtual void OnGUI()
+        {
+            if (!_stylesInitialized && EditorStyles.boldLabel != null)
+            {
+                InitializeStyles();
+                _stylesInitialized = true;
+            }
+        }
         #endregion
 
         #region 样式初始化
