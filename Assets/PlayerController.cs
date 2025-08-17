@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement Settings")]
     public float moveSpeed = 3f;
+    public float smoothTime = 0.1f;
     public float acceleration = 20f;
     public float deceleration = 20f;
     public float rotationSpeed = 180f; // 旋转速度（度/秒）
@@ -21,7 +22,8 @@ public class PlayerController : MonoBehaviour
     private CharacterController characterController;
     private Vector3 moveDirection;
     private Vector3 currentVelocity;
-
+    private Vector3 velocitySmoothDamp; 
+    
     // 动画速度平滑
     private float smoothedAnimationSpeed = 0f;
     private float animationSpeedVelocity = 0f;
@@ -51,19 +53,39 @@ public class PlayerController : MonoBehaviour
         float vertical = Input.GetAxis("Vertical");
         Vector3 inputDirection = new Vector3(horizontal, 0, vertical);
         Vector3 worldDirection = transform.TransformDirection(inputDirection);
-        moveDirection = Vector3.Lerp(moveDirection, Vector3.zero, deceleration * Time.deltaTime);
+        // moveDirection = Vector3.Lerp(moveDirection, Vector3.zero, deceleration * Time.deltaTime);
+        // if (inputDirection.magnitude > 0.1f)
+        // {
+        //     moveDirection = worldDirection.normalized;
+        // }
+
+        // Vector3 targetVelocity = moveDirection * moveSpeed;
+        // float lerpFactor = (inputDirection.magnitude > 0.1f ? acceleration : deceleration) * Time.deltaTime;
+        // currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, lerpFactor);
+        // if (currentVelocity.magnitude < 0.1f)
+        // {
+        //     currentVelocity = Vector3.zero;
+        // }
+
+
+
+           // 如果有输入，目标速度是移动方向乘以速度
+        Vector3 targetVelocity = Vector3.zero;
         if (inputDirection.magnitude > 0.1f)
         {
-            moveDirection = worldDirection.normalized;
+            targetVelocity = worldDirection.normalized * moveSpeed;
         }
 
-        Vector3 targetVelocity = moveDirection * moveSpeed;
-        float lerpFactor = (inputDirection.magnitude > 0.1f ? acceleration : deceleration) * Time.deltaTime;
-        currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, lerpFactor);
-        if (currentVelocity.magnitude < 0.1f)
-        {
-            currentVelocity = Vector3.zero;
-        }
+        // 2. 使用 SmoothDamp 平滑地将当前速度过渡到目标速度
+        currentVelocity = Vector3.SmoothDamp(
+            currentVelocity, 
+            targetVelocity, 
+            ref velocitySmoothDamp, 
+            smoothTime,
+            moveSpeed
+        );
+
+
 
         animator.SetFloat("CharacterSpeed", currentVelocity.magnitude);
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
