@@ -145,7 +145,23 @@ public static class Global
     {
         Event?.UnregisterEvent(eventName, listener);
     }
-    
+
+    /// <summary>
+    /// 注销事件监听器（泛型版本）
+    /// </summary>
+    /// <typeparam name="T">事件参数类型</typeparam>
+    /// <param name="eventName">事件名称</param>
+    /// <param name="listener">监听器</param>
+    public static void UnregisterEvent<T>(string eventName, Action<T> listener) where T : class
+    {
+        Event?.UnregisterEvent(eventName, (obj) => {
+            if (obj is T typedObj)
+            {
+                listener?.Invoke(typedObj);
+            }
+        });
+    }
+
     /// <summary>
     /// 延迟触发事件
     /// </summary>

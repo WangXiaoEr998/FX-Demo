@@ -313,7 +313,7 @@ public class Player : MonoBehaviour
         // 获取移动输入
         _horizontalInput = Input.GetAxis("Horizontal");
         _verticalInput = Input.GetAxis("Vertical");
-        
+
         // 获取跑步输入
         _isRunning = Input.GetKey(KeyCode.LeftShift);
         
@@ -388,26 +388,27 @@ public class Player : MonoBehaviour
         // 计算移动方向
         Vector3 inputDirection = new Vector3(_horizontalInput, 0f, _verticalInput);
         inputDirection = inputDirection.normalized;
-        
+
         // 转换为世界坐标系
-        _moveDirection = transform.TransformDirection(inputDirection);
-        
+        _moveDirection = inputDirection;// transform.TransformDirection(inputDirection);
+
         // 应用移动速度
         _moveDirection *= CurrentMoveSpeed;
-        
-        // 应用重力
-        if (_characterController != null && !_characterController.isGrounded)
-        {
-            _moveDirection.y -= 9.81f * Time.deltaTime;
-        }
-        
+
+        //// 应用重力
+        //if (_characterController != null && !_characterController.isGrounded)
+        //{
+        //    _moveDirection.y -= 9.81f * Time.deltaTime;
+        //}
+
         // 旋转角色
         if (inputDirection.magnitude > 0.1f)
         {
             float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Lerp(transform.rotation, 
+            transform.rotation = Quaternion.Lerp(transform.rotation,
                 Quaternion.Euler(0f, targetAngle, 0f), Time.deltaTime * 10f);
         }
+
     }
 
     /// <summary>
@@ -419,7 +420,7 @@ public class Player : MonoBehaviour
         {
             // 移动角色
             _characterController.Move(_moveDirection * Time.fixedDeltaTime);
-            
+
             // 更新玩家数据中的位置
             if (_playerData != null)
             {
@@ -427,6 +428,7 @@ public class Player : MonoBehaviour
                 _playerData.rotation = transform.eulerAngles.y;
             }
         }
+        LogDebug($"Transform位置: {transform.position}, PlayerData位置: {_playerData.position}");
     }
     #endregion
 
@@ -441,7 +443,7 @@ public class Player : MonoBehaviour
 
         // 计算移动速度
         float moveSpeed = new Vector3(_horizontalInput, 0f, _verticalInput).magnitude;
-        
+
         // 设置动画参数
         _animator.SetFloat(_animMoveSpeed, moveSpeed);
         _animator.SetBool(_animIsRunning, _isRunning && moveSpeed > 0.1f);

@@ -665,10 +665,11 @@ public class PlayerSystem : BaseGameSystem
             {
                 _currentPlayer = playerObject.AddComponent<Player>();
             }
-
+            //EventManager.Instance.TriggerEvent("PlayerCreated", playerObject);
+            
             // 初始化玩家组件
             _currentPlayer.Initialize(_playerData, this);
-
+            Global.TriggerEvent(Global.Events.Player.CREATED, new PlayerCreatedEventArgs(_playerData));
             LogDebug("玩家实例创建成功");
         }
         else
