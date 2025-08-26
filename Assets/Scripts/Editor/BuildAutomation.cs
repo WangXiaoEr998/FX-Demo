@@ -304,7 +304,6 @@ namespace FanXing.Editor
             string resultMessage = "";
             if (summary.result == BuildResult.Succeeded)
             {
-                // _canBuilding = false;
                 var duration = DateTime.Now - startTime;
                 resultMessage = $"构建成功! 大小: {FormatBytes(summary.totalSize)},用时{duration.TotalSeconds:F1}s";
                 Debug.Log(resultMessage);
@@ -349,82 +348,44 @@ namespace FanXing.Editor
             // 返回完整路径
             return Path.Combine(projectRoot, assetPath);
         }
-        /// <summary>
-        /// 生成一个唯一的哈希签名，用于标识当前构建配置和内容
-        /// </summary>
-        /// <param name="buildTarget"></param>
-        /// <returns></returns>
         private string CreateBuildSignature(BuildTarget buildTarget)
         {
             var sb = new StringBuilder();
-            // AppendLine用追加文本 并在末尾添加换行符
             sb.AppendLine(buildTarget.ToString());
             sb.AppendLine(_productName ?? string.Empty);
             sb.AppendLine(_version ?? string.Empty);
             sb.AppendLine(_developmentBuild.ToString());
             sb.AppendLine(_compressWithLz4.ToString());
-            // 场景信息：路径 + GUID + 最后修改时间
             var scenes = GetScenePath();
             #region 构建问题
             #endregion
             foreach (var path in scenes)
             {
                 string guid = AssetDatabase.AssetPathToGUID(path);
-                #region GUID
-                // 用 GUID 是为了用“资产的稳定身份”参与签名，对抗路径变更与替换带来的误判
-                // GUID是一个全局唯一标识符
-                // 每一个资源都有唯一的GUID 即使文件被重命名或移动 GUID保持不变
-                // 优点：
-                // 1.唯一性：几乎不会发生冲突
-                // 2.持久性：资源重命名或移动后仍然有效
-                // 3.独立性：不依赖文件路径或名称
-                // 缺点：
-                // 1.可读性差
-                // 2.存储开销
-                #endregion
                 long ticks = 0;
                 try
                 {
-                    var full = GetFullProjectPath(path); // 得到完整的场景路径
+                    var full = GetFullProjectPath(path);
                     if (!string.IsNullOrEmpty(full) && File.Exists(full))
-                        ticks = File.GetLastWriteTimeUtc(full).Ticks; // 获取文件的UTC(全球标准时间 无时差)最后修改时间;Ticks返回表示时间的64为整数
+                        ticks = File.GetLastWriteTimeUtc(full).Ticks;
                 }
                 catch { /* ignore IO issues */ }
                 sb.AppendLine($"{path}|{guid}|{ticks}");
             }
-            // using中的内容往往是非托管对象 也就是不会被GC自动删除的数据
-            // 使用using 可以在代码块执行完毕后 自动调用Dispose函数 删除内容 防止资源泄漏
+
             using (var sha = SHA256.Create())
             {
-                #region SHA256
-                // 它是一种密码学哈希函数 用于生成数据的唯一"数字指纹"
-                // SHA256.Create()用于创建SHA256哈希算法的实例
-                // sb.ToString()将Substring内容转换为普通字符串
-                // Encoding.UTF8：获取UTF-8编码的实例
-                // GetBytes转换为字节数组
-                // sha.ComputeHash()用于计算输入数据的哈希值
-                // BitConverter.ToString(hash) 将字节数组转换为十六进制字符串 它会生成带连字符"-"的字符串
-                //Replace("-", string.Empty) 移除所有连字符，生成连续的十六进制字符串
-                #endregion
                 var bytes = Encoding.UTF8.GetBytes(sb.ToString());
                 var hash = sha.ComputeHash(bytes);
                 return BitConverter.ToString(hash).Replace("-", string.Empty);
             }
         }
-        /// <summary>
-        /// 得到旧标签
-        /// </summary>
-        /// <param name="buildTarget"></param>
-        /// <returns></returns>
+
         private static string LoadLastBuildSignature(BuildTarget buildTarget)
         {
             return EditorPrefs.GetString($"FX_LastBuildSignature_{buildTarget}", string.Empty);
         }
-        /// <summary>
-        /// 保存最新构建的标签
-        /// </summary>
-        /// <param name="buildTarget"></param>
-        /// <param name="signature"></param>
+
         private static void SaveLastBuildSignature(BuildTarget buildTarget, string signature)
         {
             EditorPrefs.SetString($"FX_LastBuildSignature_{buildTarget}", signature ?? string.Empty);
