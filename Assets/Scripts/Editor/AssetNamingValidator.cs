@@ -220,9 +220,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 验证逻辑
-        /// <summary>
-        /// 检查所有资源
-        /// </summary>
+
         private void ValidateAllAssets()
         {
             _validationResults.Clear();
@@ -262,10 +260,7 @@ namespace FanXing.Editor
 
             LogInfo($"选中资源检查完成，发现 {_validationResults.Count} 个问题");
         }
-        /// <summary>
-        /// 检查资源
-        /// </summary>
-        /// <param name="assetPath">资源路径</param>
+
         private void ValidateAsset(string assetPath)
         {
             // 跳过系统文件和文件夹
@@ -277,20 +272,18 @@ namespace FanXing.Editor
             }
             // 无拓展名的纯文件名
             string fileName = Path.GetFileNameWithoutExtension(assetPath);
-            //Debug.Log("fileName:" + fileName);
             // 文件拓展名
             string extension = Path.GetExtension(assetPath).ToLower();
-            //Debug.Log("extension:" + extension);
             // 文件所在目录路径
             string directory = Path.GetDirectoryName(assetPath);
 
             // 根据文件类型应用相应的命名规则
             foreach (var rule in _namingRules.Values)
             {
-                if (rule.IsApplicable(assetPath, extension)) // true就表明文件后缀是在extensions中的
+                if (rule.IsApplicable(assetPath, extension))
                 {
                     var result = rule.Validate(assetPath, fileName);
-                    if (result != null) // 说明文件名不符合规定
+                    if (result != null)
                     {
                         _validationResults.Add(result);
 
@@ -399,7 +392,7 @@ namespace FanXing.Editor
                 LogError("无法生成新路径，自动修复失败");
                 return;
             }
-            string error = AssetDatabase.MoveAsset(oldPath, newPath);// 资源文件通过新旧路径转移
+            string error = AssetDatabase.MoveAsset(oldPath, newPath);
             if (string.IsNullOrEmpty(error))
             {
                 LogInfo($"已自动修复: {oldPath} -> {newPath}");
