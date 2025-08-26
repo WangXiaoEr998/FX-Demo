@@ -122,8 +122,7 @@ namespace FanXing.Editor
             {
                 _validationResults.Clear();
             }
-            
-            #region 翻译功能
+
             if (GUILayout.Button("翻译功能", _buttonStyle, GUILayout.Width(80)))
             {
                 _isOpen = EditorUtility.DisplayDialog(
@@ -133,7 +132,6 @@ namespace FanXing.Editor
                     "是", "否");
 
             }
-            #endregion
 
             GUILayout.FlexibleSpace();
 
@@ -279,15 +277,17 @@ namespace FanXing.Editor
             }
             // 无拓展名的纯文件名
             string fileName = Path.GetFileNameWithoutExtension(assetPath);
+            //Debug.Log("fileName:" + fileName);
             // 文件拓展名
             string extension = Path.GetExtension(assetPath).ToLower();
+            //Debug.Log("extension:" + extension);
             // 文件所在目录路径
             string directory = Path.GetDirectoryName(assetPath);
 
             // 根据文件类型应用相应的命名规则
             foreach (var rule in _namingRules.Values)
             {
-                if (rule.IsApplicable(assetPath, extension))
+                if (rule.IsApplicable(assetPath, extension)) // true就表明文件后缀是在extensions中的
                 {
                     var result = rule.Validate(assetPath, fileName);
                     if (result != null) // 说明文件名不符合规定
@@ -302,11 +302,7 @@ namespace FanXing.Editor
                 }
             }
         }
-        /// <summary>
-        /// 检查文件名是否符合规范
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
+
         private bool IsFileNameValidate(string fileName)
         {
             Regex regex = new Regex(@"^[a-zA-Z0-9_]+$");
@@ -403,7 +399,7 @@ namespace FanXing.Editor
                 LogError("无法生成新路径，自动修复失败");
                 return;
             }
-            string error = AssetDatabase.MoveAsset(oldPath, newPath);
+            string error = AssetDatabase.MoveAsset(oldPath, newPath);// 资源文件通过新旧路径转移
             if (string.IsNullOrEmpty(error))
             {
                 LogInfo($"已自动修复: {oldPath} -> {newPath}");
@@ -417,7 +413,7 @@ namespace FanXing.Editor
         #endregion
 
         #region 脚本重新命名
-        private void RenameScriptAndClass(string oldPath, string newName)
+        private void RenameScriptAndClass(string oldPath,string newName)
         {
             // 读取原脚本内容
             string content = File.ReadAllText(oldPath);
@@ -439,13 +435,10 @@ namespace FanXing.Editor
         #endregion
 
         #region 命名规则初始化
-        /// <summary>
-        /// 命名规则初始化，添加了各种资源命名规则
-        /// </summary>
         private void InitializeNamingRules()
         {
             _namingRules.Clear();
-
+            
             // C# 脚本命名规则
             _namingRules.Add("CSharpScript", new NamingRule
             {
@@ -455,7 +448,7 @@ namespace FanXing.Editor
                 description = "C# 脚本应使用 PascalCase 命名",
                 severity = ValidationSeverity.Error
             });
-
+            
             // 贴图资源命名规则
             _namingRules.Add("Texture", new NamingRule
             {
@@ -465,7 +458,7 @@ namespace FanXing.Editor
                 description = "贴图应以 ui_、tex_ 或 icon_ 开头，使用小写字母和下划线",
                 severity = ValidationSeverity.Warning
             });
-
+            
             // 音频资源命名规则
             _namingRules.Add("Audio", new NamingRule
             {
@@ -475,7 +468,7 @@ namespace FanXing.Editor
                 description = "音频应以 bgm_、sfx_ 或 voice_ 开头，使用小写字母和下划线",
                 severity = ValidationSeverity.Warning
             });
-
+            
             // 3D模型命名规则
             _namingRules.Add("Model", new NamingRule
             {
@@ -485,7 +478,7 @@ namespace FanXing.Editor
                 description = "3D模型应以 character_、prop_ 或 environment_ 开头",
                 severity = ValidationSeverity.Warning
             });
-
+            
             // Prefab 命名规则
             _namingRules.Add("Prefab", new NamingRule
             {
@@ -502,21 +495,21 @@ namespace FanXing.Editor
         private List<ValidationResult> GetFilteredResults()
         {
             var filtered = new List<ValidationResult>();
-
+            
             foreach (var result in _validationResults)
             {
                 // 严重程度过滤
                 if (_severityFilter != ValidationSeverity.All && result.severity != _severityFilter)
                     continue;
-
+                
                 // 搜索过滤
-                if (!string.IsNullOrEmpty(_searchFilter) &&
+                if (!string.IsNullOrEmpty(_searchFilter) && 
                     !result.assetPath.ToLower().Contains(_searchFilter.ToLower()))
                     continue;
-
+                
                 filtered.Add(result);
             }
-
+            
             return filtered;
         }
 
@@ -566,12 +559,7 @@ namespace FanXing.Editor
         public string[] extensions;
         public string description;
         public ValidationSeverity severity;
-        /// <summary>
-        /// 检查extension对应的文件类型是什么
-        /// </summary>
-        /// <param name="assetPath">文件路径</param>
-        /// <param name="extension">拓展名</param>
-        /// <returns></returns>
+        
         public bool IsApplicable(string assetPath, string extension)
         {
             if (extensions == null || extensions.Length == 0)
@@ -585,15 +573,9 @@ namespace FanXing.Editor
 
             return false;
         }
-        /// <summary>
-        /// 返回一个检查结果 如果是true就返回null 表明文件名符合规定
-        /// </summary>
-        /// <param name="assetPath">文件路径</param>
-        /// <param name="fileName">文件名</param>
-        /// <returns></returns>
+        
         public ValidationResult Validate(string assetPath, string fileName)
         {
-            // IsMatch是快速校验文件名是否符合pattern规定的方法
             if (Regex.IsMatch(fileName, pattern))
                 return null;
 
