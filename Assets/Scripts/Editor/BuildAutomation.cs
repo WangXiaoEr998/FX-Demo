@@ -3,6 +3,11 @@ using UnityEditor;
 using UnityEditor.Build.Reporting;
 using System.IO;
 using System;
+using System.Linq;
+using UnityEngine.SceneManagement;
+using System.Security.Cryptography;
+using System.Text;
+using NUnit.Framework;
 
 /// <summary>
 /// 自动化构建脚本，提供一键构建和发布功能
@@ -23,13 +28,13 @@ namespace FanXing.Editor
         }
 
         [MenuItem(MENU_ROOT + "构建工具/快速构建 Windows", false, 21)]
-        public static void QuickBuildWindows()
+        public void QuickBuildWindows()
         {
             BuildGame(BuildTarget.StandaloneWindows64, "FanXing-Demo-Windows");
         }
 
         [MenuItem(MENU_ROOT + "构建工具/快速构建 Android", false, 22)]
-        public static void QuickBuildAndroid()
+        public void QuickBuildAndroid()
         {
             BuildGame(BuildTarget.Android, "FanXing-Demo-Android");
         }
@@ -43,10 +48,6 @@ namespace FanXing.Editor
         private bool _developmentBuild = false;
         private bool _autoRunAfterBuild = false;
         private bool _compressWithLz4 = true;
-        
-        private static readonly string[] BUILD_SCENES = {
-            "Assets/Scenes/MainScene.unity"
-        };
         #endregion
 
         #region 生命周期
@@ -70,10 +71,15 @@ namespace FanXing.Editor
             EditorPrefs.SetBool("FX_CompressWithLz4", _compressWithLz4);
         }
         #endregion
-
+        private void Awake()
+        {
+            LoadData();
+        }
         #region GUI绘制
         protected override void OnGUI()
         {
+            base.OnGUI();
+
             DrawTitle("自动化构建工具");
             
             DrawBuildSettings();
@@ -125,7 +131,6 @@ namespace FanXing.Editor
             
             EditorGUILayout.EndVertical();
         }
-
         private void DrawBuildActions()
         {
             EditorGUILayout.BeginVertical(_boxStyle);
@@ -135,25 +140,44 @@ namespace FanXing.Editor
             
             if (GUILayout.Button("构建游戏", _buttonStyle, GUILayout.Height(30)))
             {
-                string buildName = $"{_productName}-{GetPlatformName(_selectedBuildTarget)}";
-                BuildGame(_selectedBuildTarget, buildName);
+                // 基于签名的重复构建检测：相同配置与内容则跳过
+                // 新签名
+                string currentSig = CreateBuildSignature(_selectedBuildTarget);
+                // 旧签名
+                string lastSig = LoadLastBuildSignature(_selectedBuildTarget);
+                if (string.Equals(currentSig, lastSig, StringComparison.Ordinal))
+                {
+                    LogWarning("未检测到变化，本次跳过构建");
+                }
+                else
+                {
+                    string buildName = $"{_productName}-{GetPlatformName(_selectedBuildTarget)}";
+                    BuildGame(_selectedBuildTarget, buildName);
+                }
             }
             
             if (GUILayout.Button("构建并运行", _buttonStyle, GUILayout.Height(30)))
             {
-                _autoRunAfterBuild = true;
-                string buildName = $"{_productName}-{GetPlatformName(_selectedBuildTarget)}";
-                BuildGame(_selectedBuildTarget, buildName);
+                string currentSig = CreateBuildSignature(_selectedBuildTarget);
+                string lastSig = LoadLastBuildSignature(_selectedBuildTarget);
+                if (string.Equals(currentSig, lastSig, StringComparison.Ordinal))
+                {
+                    LogWarning("未检测到变化，本次跳过构建");
+                }
+                else
+                {
+                    _autoRunAfterBuild = true;
+                    string buildName = $"{_productName}-{GetPlatformName(_selectedBuildTarget)}";
+                    BuildGame(_selectedBuildTarget, buildName);
+                }
             }
             
-            EditorGUILayout.EndHorizontal();
-            
+            EditorGUILayout.EndHorizontal();  
             EditorGUILayout.Space(5);
-            
             EditorGUILayout.BeginHorizontal();
             
             if (GUILayout.Button("清理构建文件", _buttonStyle))
-            {
+            {          
                 CleanBuildFiles();
             }
             
@@ -163,7 +187,6 @@ namespace FanXing.Editor
             }
             
             EditorGUILayout.EndHorizontal();
-            
             EditorGUILayout.EndVertical();
         }
 
@@ -195,12 +218,14 @@ namespace FanXing.Editor
         #endregion
 
         #region 构建逻辑
-        public static void BuildGame(BuildTarget buildTarget, string buildName)
+        public void BuildGame(BuildTarget buildTarget, string buildName)
         {
             var automation = new BuildAutomation();
-            automation.LoadData();
-            
+            // automation.LoadData();
+            var startTime = DateTime.Now;
+
             // 设置构建选项
+            // BuildOptions 用来指定打包选项的枚举类型
             BuildOptions buildOptions = BuildOptions.None;
             
             if (automation._developmentBuild)
@@ -218,12 +243,13 @@ namespace FanXing.Editor
             {
                 Directory.CreateDirectory(buildDirectory);
             }
-            
+
             // 设置构建路径
+            // 目录 + 产品名 + 后缀
             string buildPath = Path.Combine(buildDirectory, GetExecutableName(buildTarget, automation._productName));
             
             // 更新项目设置
-            Debug.Log($"开始构建配置: 产品名={automation._productName}, 版本={automation._version}");
+            LogInfo($"开始构建配置: 产品名={automation._productName}, 版本={automation._version}");
 
             // 注意：在某些Unity版本中，PlayerSettings的某些属性可能需要通过Project Settings手动设置
             // 这里我们专注于构建过程，避免API兼容性问题
@@ -234,24 +260,41 @@ namespace FanXing.Editor
                 try
                 {
                     string packageName = $"com.fanxing.{automation._productName.ToLower().Replace("-", "").Replace(" ", "")}";
-                    Debug.Log($"Android包名设置为: {packageName}");
+                    LogInfo($"Android包名设置为: {packageName}");
                     // 如果需要设置包名，建议在Project Settings中手动配置
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogWarning($"Android设置警告: {e.Message}");
+                    LogWarning($"Android设置警告: {e.Message}");
                 }
             }
             
-            // 执行构建
+            var scenes = GetScenePath();
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
-                scenes = BUILD_SCENES,
+                scenes = scenes,
                 locationPathName = buildPath,
                 target = buildTarget,
                 options = buildOptions
             };
-            
+
+            // 场景校验
+            var validScenes = buildPlayerOptions.scenes
+                .Where(p => !string.IsNullOrWhiteSpace(p) && AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null)
+                .ToArray();
+            var invalidScenes = buildPlayerOptions.scenes
+                .Where(p => string.IsNullOrWhiteSpace(p) || AssetDatabase.LoadAssetAtPath<SceneAsset>(p) == null)
+                .ToArray();
+            if (invalidScenes.Length > 0)
+            {
+                Debug.LogWarning("存在无效场景:" +  invalidScenes);
+            }
+            if (validScenes.Length == 0)
+            {
+                EditorUtility.DisplayDialog("构建失败", "没有有效的场景可供构建，请检查BuildSetting中是否勾选了场景", "确定");
+                return;
+            }
+
             Debug.Log($"开始构建: {buildTarget} -> {buildPath}");
             
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
@@ -261,12 +304,13 @@ namespace FanXing.Editor
             string resultMessage = "";
             if (summary.result == BuildResult.Succeeded)
             {
-                resultMessage = $"构建成功! 大小: {FormatBytes(summary.totalSize)}";
+                var duration = DateTime.Now - startTime;
+                resultMessage = $"构建成功! 大小: {FormatBytes(summary.totalSize)},用时{duration.TotalSeconds:F1}s";
                 Debug.Log(resultMessage);
                 
                 // 记录构建历史
                 automation.RecordBuildHistory(buildTarget, buildName, summary);
-                
+                SaveLastBuildSignature(buildTarget, CreateBuildSignature(buildTarget));
                 EditorUtility.DisplayDialog("构建完成", resultMessage, "确定");
             }
             else
@@ -275,8 +319,77 @@ namespace FanXing.Editor
                 Debug.LogError(resultMessage);
                 EditorUtility.DisplayDialog("构建失败", resultMessage, "确定");
             }
+            SaveData();
         }
 
+        private string[] GetScenePath()
+        {
+            return EditorBuildSettings.scenes
+                .Where(scene => scene.enabled)
+                .Select(scene => scene.path)
+                .ToArray();
+        }
+
+        private bool ValidScenes(string[] nowScenes, string[] oldScenes)
+        {
+            if (nowScenes == null || oldScenes == null) return true;
+            if (nowScenes.Length != oldScenes.Length) return true;
+            return !nowScenes.SequenceEqual(oldScenes);
+        }
+        private static string GetFullProjectPath(string assetPath)
+        {
+            if (string.IsNullOrEmpty(assetPath)) return assetPath;
+            // 获取data路径
+            string dataPath = Application.dataPath;
+            // 获取项目根目录
+            string projectRoot = dataPath.Substring(0, dataPath.Length - "Assets".Length);
+            // 替换路径分隔符
+            assetPath = assetPath.Replace('/', Path.DirectorySeparatorChar);
+            // 返回完整路径
+            return Path.Combine(projectRoot, assetPath);
+        }
+        private string CreateBuildSignature(BuildTarget buildTarget)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(buildTarget.ToString());
+            sb.AppendLine(_productName ?? string.Empty);
+            sb.AppendLine(_version ?? string.Empty);
+            sb.AppendLine(_developmentBuild.ToString());
+            sb.AppendLine(_compressWithLz4.ToString());
+            var scenes = GetScenePath();
+            #region 构建问题
+            #endregion
+            foreach (var path in scenes)
+            {
+                string guid = AssetDatabase.AssetPathToGUID(path);
+                long ticks = 0;
+                try
+                {
+                    var full = GetFullProjectPath(path);
+                    if (!string.IsNullOrEmpty(full) && File.Exists(full))
+                        ticks = File.GetLastWriteTimeUtc(full).Ticks;
+                }
+                catch { /* ignore IO issues */ }
+                sb.AppendLine($"{path}|{guid}|{ticks}");
+            }
+
+            using (var sha = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+                var hash = sha.ComputeHash(bytes);
+                return BitConverter.ToString(hash).Replace("-", string.Empty);
+            }
+        }
+
+        private static string LoadLastBuildSignature(BuildTarget buildTarget)
+        {
+            return EditorPrefs.GetString($"FX_LastBuildSignature_{buildTarget}", string.Empty);
+        }
+
+        private static void SaveLastBuildSignature(BuildTarget buildTarget, string signature)
+        {
+            EditorPrefs.SetString($"FX_LastBuildSignature_{buildTarget}", signature ?? string.Empty);
+        }
         private void RecordBuildHistory(BuildTarget buildTarget, string buildName, BuildSummary summary)
         {
             string buildHistoryPath = Path.Combine(_buildPath, "build_history.txt");
@@ -300,6 +413,7 @@ namespace FanXing.Editor
                 {
                     try
                     {
+                        EditorPrefs.DeleteKey($"FX_LastBuildSignature_{_selectedBuildTarget}");
                         Directory.Delete(_buildPath, true);
                         ShowSuccessMessage("构建文件已清理完成！");
                     }
