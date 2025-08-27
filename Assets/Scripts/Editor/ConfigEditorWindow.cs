@@ -31,27 +31,43 @@ namespace FanXing.Editor
         private List<NPCConfigData> _npcConfigs = new List<NPCConfigData>();
         private NPCConfigData _selectedNPC;
         private int _selectedNPCIndex = -1;
+        private string _npcIdInput = string.Empty;
+        private bool _saveNPCSuccess = false;
 
         // 任务配置
         private List<QuestConfigData> _questConfigs = new List<QuestConfigData>();
         private QuestConfigData _selectedQuest;
         private int _selectedQuestIndex = -1;
+        private string _questIdInput = string.Empty;
+        private bool _saveQuestSuccess = false;
 
         // 商店配置
         private List<ShopConfigData> _shopConfigs = new List<ShopConfigData>();
         private ShopConfigData _selectedShop;
         private int _selectedShopIndex = -1;
+        private string _shopIdInput = string.Empty;
+        private bool _saveShopSuccess = false;
 
         // 作物配置
         private List<CropConfigData> _cropConfigs = new List<CropConfigData>();
         private CropConfigData _selectedCrop;
         private int _selectedCropIndex = -1;
+        private string _cropIdInput = string.Empty;
+        private bool _saveCropSuccess = false;
 
         // 技能配置
         private List<SkillConfigData> _skillConfigs = new List<SkillConfigData>();
         private SkillConfigData _selectedSkill;
         private int _selectedSkillIndex = -1;
+        private string _skillIdInput = string.Empty;
+        private bool _saveSkillSuccess = false;
         #endregion
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            ShowSaveResult();
+        }
 
         #region 生命周期
         protected override void LoadData()
@@ -65,11 +81,11 @@ namespace FanXing.Editor
 
         protected override void SaveData()
         {
-            SaveNPCConfigs();
-            SaveQuestConfigs();
-            SaveShopConfigs();
-            SaveCropConfigs();
-            SaveSkillConfigs();
+            SaveNPCConfigs(false);
+            SaveQuestConfigs(false);
+            SaveShopConfigs(false);
+            SaveCropConfigs(false);
+            SaveSkillConfigs(false);
         }
         #endregion
 
@@ -92,7 +108,7 @@ namespace FanXing.Editor
                 case 2: DrawShopConfigTab(); break;
                 case 3: DrawCropConfigTab(); break;
                 case 4: DrawSkillConfigTab(); break;
-            }
+            }  
         }
         #endregion
 
@@ -122,6 +138,8 @@ namespace FanXing.Editor
                 {
                     _selectedNPCIndex = i;
                     _selectedNPC = _npcConfigs[i];
+                    _npcIdInput = _selectedNPC.npcId.ToString(); // 切换时同步编辑缓存
+                    GUI.FocusControl(null); // 取消焦点，避免按钮被选中时无法输入
                 }
 
                 GUI.backgroundColor = Color.white;
@@ -149,7 +167,27 @@ namespace FanXing.Editor
         private void DrawNPCDetails()
         {
             DrawHeader("NPC详细配置");
-            ValidateNPCId(_selectedNPC);
+            // 使用持久化的 _npcIdEditing 用来支持非法中间状态并显示 HelpBox
+            if (string.IsNullOrEmpty(_npcIdInput))
+                _npcIdInput = _selectedNPC.npcId.ToString();
+            _npcIdInput = EditorGUILayout.TextField(new GUIContent("NPC Id", "请输入正整数作为NPC的唯一标识"), _npcIdInput);
+            bool npcIdValid = int.TryParse(_npcIdInput, out int parsedId) && parsedId > 0;
+            if (npcIdValid)
+            {
+                bool duplicate = _npcConfigs.Any(n => n != _selectedNPC && n.npcId == parsedId);
+                if (duplicate)
+                {
+                    EditorGUILayout.HelpBox($"ID {parsedId} 已存在，不能重复", MessageType.Error);
+                }
+                else
+                {
+                    _selectedNPC.npcId = parsedId; // 只有合法且不重复才写回
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("NPC Id必须是正整数", MessageType.Error);
+            }
             _selectedNPC.npcName = EditorGUILayout.TextField("NPC名称", _selectedNPC.npcName);
             _selectedNPC.npcType = (NPCType)EditorGUILayout.EnumPopup("NPC类型", _selectedNPC.npcType);
             _selectedNPC.dialogueText = EditorGUILayout.TextArea(_selectedNPC.dialogueText, GUILayout.Height(60));
@@ -159,11 +197,8 @@ namespace FanXing.Editor
             EditorGUILayout.Space(10);
             DrawButtonGroup(
                 ("保存配置", () =>
-                {
-                    if (ValidateNPCData(_selectedNPC))
-                    {
-                        SaveNPCConfigs();
-                    }
+                {         
+                    SaveNPCConfigs(true);
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_npcConfigs, "npc_config"))
@@ -189,6 +224,8 @@ namespace FanXing.Editor
             _npcConfigs.Add(newNPC);
             _selectedNPCIndex = _npcConfigs.Count - 1;
             _selectedNPC = newNPC;
+            _npcIdInput = newNPC.npcId.ToString();
+            GUI.FocusControl(null);
         }
 
         private void DeleteSelectedNPC()
@@ -200,6 +237,7 @@ namespace FanXing.Editor
                     _npcConfigs.RemoveAt(_selectedNPCIndex);
                     _selectedNPCIndex = -1;
                     _selectedNPC = null;
+                    _npcIdInput = string.Empty; // 清空编辑缓存
                 }
             }
         }
@@ -227,6 +265,8 @@ namespace FanXing.Editor
                 {
                     _selectedQuestIndex = i;
                     _selectedQuest = _questConfigs[i];
+                    _questIdInput = _questConfigs[i].questId.ToString();
+                    GUI.FocusControl(null);
                 }
                 GUI.backgroundColor = Color.white;
             }
@@ -241,7 +281,7 @@ namespace FanXing.Editor
             else
             {
                 EditorGUI.indentLevel -= 17;
-                EditorGUILayout.LabelField("请选择一个任务进行编辑", EditorStyles.centeredGreyMiniLabel);
+                EditorGUILayout.LabelField("请选择一个任务进行编辑", EditorStyles.centeredGreyMiniLabel); // 用于显示灰色、居中、小号的辅助性文本标签
                 EditorGUI.indentLevel += 17;
             }
             EditorGUILayout.EndVertical();
@@ -251,7 +291,26 @@ namespace FanXing.Editor
         private void DrawQuestDetails()
         {
             DrawHeader("任务详细配置");
-            ValidateQuestId(_selectedQuest);
+            if (string.IsNullOrEmpty(_questIdInput))
+                _questIdInput = _selectedQuest.questId.ToString();
+            _questIdInput = EditorGUILayout.TextField(new GUIContent("任务Id", "请输入正整数作为任务的唯一标识"), _questIdInput);
+            bool questIdValid = int.TryParse(_questIdInput, out int parsedId) && parsedId > 0;
+            if (questIdValid)
+            {
+                bool duplicate = _questConfigs.Any(q => q != _selectedQuest && q.questId == parsedId);
+                if (duplicate)
+                {
+                    EditorGUILayout.HelpBox($"ID{parsedId}已存在，不能重复", MessageType.Error);
+                }
+                else
+                {
+                    _selectedQuest.questId = parsedId;
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("任务 Id必须是正整数", MessageType.Error);
+            }
             _selectedQuest.questName = EditorGUILayout.TextField("任务名称", _selectedQuest.questName);
             _selectedQuest.questType = (QuestType)EditorGUILayout.EnumPopup("任务类型", _selectedQuest.questType);
             _selectedQuest.description = EditorGUILayout.TextArea(_selectedQuest.description, GUILayout.Height(80));
@@ -261,11 +320,8 @@ namespace FanXing.Editor
             EditorGUILayout.Space(10);
             DrawButtonGroup(
              ("保存配置", () =>
-             {
-                 if (ValidateQuestData(_selectedQuest))
-                 {
-                     SaveQuestConfigs();
-                 }
+             {              
+                 SaveQuestConfigs(true);           
              }
             ),
              ("导出JSON", () => ExportJsonConfig(_questConfigs, "quest_config"))
@@ -290,6 +346,8 @@ namespace FanXing.Editor
             _questConfigs.Add(newQuest);
             _selectedQuestIndex = _questConfigs.Count - 1;
             _selectedQuest = newQuest;
+            _questIdInput = newQuest.questId.ToString();
+            GUI.FocusControl(null);
         }
         private void DeleteSelectedQuest()
         {
@@ -300,19 +358,20 @@ namespace FanXing.Editor
                     _questConfigs.RemoveAt(_selectedQuestIndex);
                     _selectedQuestIndex = -1;
                     _selectedQuest = null;
+                    _questIdInput = string.Empty;
                 }
             }
         }
         #endregion
 
-        #region 商店配置
+        #region 商品配置
         private void DrawShopConfigTab()
         {
             EditorGUILayout.BeginHorizontal();
 
             // 左侧列表
             EditorGUILayout.BeginVertical(GUILayout.Width(250));
-            DrawHeader("商店列表");
+            DrawHeader("商品列表");
             DrawButtonGroup(
                 ("新建商品", CreateNewShop),
                 ("删除商品", DeleteSelectedShop)
@@ -327,6 +386,8 @@ namespace FanXing.Editor
                 {
                     _selectedShopIndex = i;
                     _selectedShop = _shopConfigs[i];
+                    _shopIdInput = _shopConfigs[i].shopId.ToString();
+                    GUI.FocusControl(null); // 取消焦点，避免按钮被选中时无法输入
                 }
                 GUI.backgroundColor = Color.white;
             }
@@ -351,7 +412,26 @@ namespace FanXing.Editor
         private void DrawShopDetails()
         {
             DrawHeader("商品详细配置");
-            ValidateShopId(_selectedShop);
+            if (string.IsNullOrEmpty(_shopIdInput))
+                _shopIdInput = _selectedShop.shopId.ToString();
+            _shopIdInput = EditorGUILayout.TextField(new GUIContent("商品 Id", "请输入正整数作为商品的唯一标识"), _shopIdInput);
+            bool shopIdValid = int.TryParse(_shopIdInput, out int parsedId) && parsedId > 0;
+            if (shopIdValid)
+            {
+                bool duplicate = _shopConfigs.Any(s => s != _selectedShop && s.shopId == parsedId);
+                if (duplicate)
+                {
+                    EditorGUILayout.HelpBox($"ID{parsedId}已存在，不能重复", MessageType.Error);
+                }
+                else
+                {
+                    _selectedShop.shopId = parsedId;
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("商品 Id必须是正整数", MessageType.Error);
+            }
             _selectedShop.shopName = EditorGUILayout.TextField("商品名称", _selectedShop.shopName);
             _selectedShop.shopType = (ShopType)EditorGUILayout.EnumPopup("商品类型", _selectedShop.shopType);
             _selectedShop.rentCost = EditorGUILayout.IntField("商品价格", _selectedShop.rentCost);
@@ -361,10 +441,7 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    if (ValidateShopData(_selectedShop))
-                    {
-                        SaveShopConfigs();
-                    }
+                    SaveShopConfigs(true);
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_shopConfigs, "shop_config"))
@@ -379,6 +456,7 @@ namespace FanXing.Editor
                     _shopConfigs.RemoveAt(_selectedShopIndex);
                     _selectedShopIndex = -1;
                     _selectedShop = null;
+                    _shopIdInput = string.Empty;
                 }
             }
         }
@@ -400,6 +478,8 @@ namespace FanXing.Editor
             _shopConfigs.Add(newShop);
             _selectedShop = newShop;
             _selectedShopIndex = _shopConfigs.Count - 1;
+            _shopIdInput = newShop.shopId.ToString();
+            GUI.FocusControl(null);
         }
         #endregion
 
@@ -424,6 +504,8 @@ namespace FanXing.Editor
                 {
                     _selectedCropIndex = i;
                     _selectedCrop = _cropConfigs[i];
+                    _cropIdInput = _cropConfigs[i].cropId.ToString();
+                    GUI.FocusControl(null);
                 }
                 GUI.backgroundColor = Color.white;
             }
@@ -447,7 +529,26 @@ namespace FanXing.Editor
         private void DrawCropDetails()
         {
             DrawHeader("作物详情配置");
-            ValidateCropId(_selectedCrop);
+            if(string.IsNullOrEmpty(_cropIdInput))
+                _cropIdInput = _selectedCrop.cropId.ToString();
+            _cropIdInput = EditorGUILayout.TextField(new GUIContent("作物Id", "请输入正整数作为作物的唯一标识"), _cropIdInput);
+            bool cropIdValid = int.TryParse(_cropIdInput,out int parsedId) && parsedId > 0;
+            if (cropIdValid)
+            {
+                bool duplicate = _cropConfigs.Any(c => c != _selectedCrop && c.cropId == parsedId);
+                if (duplicate)
+                {
+                    EditorGUILayout.HelpBox($"Id{parsedId}已存在，不能重复", MessageType.Error);
+                }
+                else
+                {
+                    _selectedCrop.cropId = parsedId;
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("作物Id必须是正整数", MessageType.Error);
+            }
             _selectedCrop.cropName = EditorGUILayout.TextField("作物名称", _selectedCrop.cropName);
             _selectedCrop.cropType = (CropType)EditorGUILayout.EnumPopup("作物类型", _selectedCrop.cropType);
             _selectedCrop.growthTime = EditorGUILayout.FloatField("作物生长时间", _selectedCrop.growthTime);
@@ -457,10 +558,7 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    if (ValidateCropData(_selectedCrop))
-                    {
-                        SaveCropConfigs();
-                    }
+                    SaveCropConfigs(true);
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_cropConfigs, "crop_config"))
@@ -484,6 +582,8 @@ namespace FanXing.Editor
             _cropConfigs.Add(newCrop);
             _selectedCropIndex = _cropConfigs.Count - 1;
             _selectedCrop = newCrop;
+            _cropIdInput = newCrop.cropId.ToString();
+            GUI.FocusControl(null);
         }
         private void DeleteSelectedCrop()
         {
@@ -494,6 +594,7 @@ namespace FanXing.Editor
                     _cropConfigs.RemoveAt(_selectedCropIndex);
                     _selectedCropIndex = -1;
                     _selectedCrop = null;
+                    _cropIdInput = string.Empty;
                 }
             }
         }
@@ -520,6 +621,8 @@ namespace FanXing.Editor
                 {
                     _selectedSkillIndex = i; 
                     _selectedSkill = _skillConfigs[i];
+                    _skillIdInput = _skillConfigs[i].skillId.ToString();
+                    GUI.FocusControl(null);
                 }
                 GUI.backgroundColor = Color.white;
             }
@@ -544,7 +647,27 @@ namespace FanXing.Editor
         private void DrawSkillDetails()
         {
             DrawHeader("技能详细配置");
-            ValidateSkillId(_selectedSkill);
+            if (string.IsNullOrEmpty(_skillIdInput))
+                _skillIdInput = _selectedSkill.skillId.ToString();
+            _skillIdInput = EditorGUILayout.TextField(new GUIContent("技能Id", "请输入正整数作为技能的唯一标识"), _skillIdInput);
+            bool skillIdValid = int.TryParse(_skillIdInput,out int parsedId) && parsedId > 0;
+            if (skillIdValid)
+            {
+                // 解析成功后需要判断parsedId是否已经重复
+                bool duplicate = _skillConfigs.Any(s => s != _selectedSkill && s.skillId == parsedId);
+                if (duplicate)
+                {
+                    EditorGUILayout.HelpBox($"Id{parsedId}已存在，不能重复", MessageType.Error);
+                }
+                else
+                {
+                    _selectedSkill.skillId = parsedId;
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("技能Id必须是正整数", MessageType.Error);
+            }
             _selectedSkill.skillName = EditorGUILayout.TextField("技能名称", _selectedSkill.skillName);
             _selectedSkill.skillType = (SkillType)EditorGUILayout.EnumPopup("技能类型", _selectedSkill.skillType);
             _selectedSkill.manaCost = EditorGUILayout.IntField("技能消耗", _selectedSkill.manaCost);
@@ -552,11 +675,8 @@ namespace FanXing.Editor
             EditorGUILayout.Space(10);
             DrawButtonGroup(
                 ("保存配置", () =>
-                {
-                    if (ValidateSkillData(_selectedSkill))
-                    {
-                        SaveSkillConfigs();
-                    }
+                {                    
+                    SaveSkillConfigs(true);       
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_skillConfigs, "skill_config"))
@@ -580,6 +700,8 @@ namespace FanXing.Editor
             _skillConfigs.Add(newSkill);
             _selectedSkillIndex = _skillConfigs.Count - 1;
             _selectedSkill = newSkill;
+            _skillIdInput = newSkill.skillId.ToString();
+            GUI.FocusControl(null);
         }
         private void DeleteSelectedSkill()
         {
@@ -590,6 +712,7 @@ namespace FanXing.Editor
                     _skillConfigs.RemoveAt(_selectedSkillIndex);
                     _selectedSkillIndex = -1;
                     _selectedSkill = null;
+                    _skillIdInput = string.Empty;
                 }
             }
         }
@@ -601,196 +724,75 @@ namespace FanXing.Editor
             _npcConfigs = ImportJsonConfig<List<NPCConfigData>>("npc_config") ?? new List<NPCConfigData>();
         }
 
-        private void SaveNPCConfigs()
+        private void SaveNPCConfigs(bool showDialog = true)
         {
             ExportJsonConfig(_npcConfigs, "npc_config");
-            ShowSuccessMessage("NPC配置已保存!");
+            if(showDialog)
+                ShowSuccessMessage("NPC配置已保存!");
+            _saveNPCSuccess = true;
         }
 
         private void LoadQuestConfigs()
         {
             _questConfigs = ImportJsonConfig<List<QuestConfigData>>("quest_config") ?? new List<QuestConfigData>();
         }
-        private void SaveQuestConfigs()
+        private void SaveQuestConfigs(bool showDialog = true)
         {
             ExportJsonConfig(_questConfigs, "quest_config");
-            ShowSuccessMessage("任务配置已保存!");
+            if(showDialog)
+                ShowSuccessMessage("任务配置已保存!");
+            _saveQuestSuccess = true;
         }
         private void LoadShopConfigs()
         {
             _shopConfigs = ImportJsonConfig<List<ShopConfigData>>("shop_config") ?? new List<ShopConfigData>();
         }
-        private void SaveShopConfigs()
+        private void SaveShopConfigs(bool showDialog = true)
         {
             ExportJsonConfig(_shopConfigs, "shop_config");
-            ShowSuccessMessage("商品配置已保存!");
+            if(showDialog)
+                ShowSuccessMessage("商品配置已保存!");
+            _saveShopSuccess = true;
         }
         private void LoadCropConfigs()
         {
             _cropConfigs = ImportJsonConfig<List<CropConfigData>>("crop_config") ?? new List<CropConfigData>();
         }
-        private void SaveCropConfigs()
+        private void SaveCropConfigs(bool showDialog = true)
         {
             ExportJsonConfig(_cropConfigs, "crop_config");
-            ShowSuccessMessage("作物配置已保存!");
+            if (showDialog)
+                 ShowSuccessMessage("作物配置已保存!");
+            _saveCropSuccess = true;
         }
         private void LoadSkillConfigs()
         {
             _skillConfigs = ImportJsonConfig<List<SkillConfigData>>("skill_config") ?? new List<SkillConfigData>();
         }
-        private void SaveSkillConfigs()
+        private void SaveSkillConfigs(bool showDialog = true)
         {
             ExportJsonConfig(_skillConfigs, "skill_config");
-            ShowSuccessMessage("技能配置已保存!");
+            if (showDialog)
+                ShowSuccessMessage("技能配置已保存!");
+            _saveSkillSuccess = true;
         }
         #endregion
 
-        #region 数据验证方法
-        private bool ValidateNPCData(NPCConfigData data)
+        #region 显示保存结果
+        private void ShowSaveResult()
         {
-            if (data.npcId <= 0)
-            {
-                ShowErrorMessage("NPC ID必须大于0");
-                return false;
-            }
-            if(_npcConfigs.Any(n => n.npcId == data.npcId && n != data))
-            {
-                ShowErrorMessage("NPC ID必须唯一");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(data.npcName))
-            {
-                ShowErrorMessage("NPC名称不能为空");
-                return false;
-            }
-
-            return true;
-        }
-        private void ValidateNPCId(NPCConfigData data)
-        {
-            if (data == null)
-                return;
-            string npcIdInput = EditorGUILayout.TextField("NPC Id",data.npcId.ToString());
-            if (int.TryParse(npcIdInput, out int newId) && newId > 0)
-                data.npcId = newId;
-            else
-                ShowErrorMessage("NPC Id只能是正整数");
-        }
-        private bool ValidateQuestData(QuestConfigData data)
-        {
-            if (data.questId <= 0)
-            {
-                ShowErrorMessage("任务 ID必须大于0");
-                return false;
-            }
-            if(_questConfigs.Any(q => q.questId == data.questId && q != data))
-            {
-                ShowErrorMessage("任务 ID必须唯一");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(data.questName))
-            {
-                ShowErrorMessage("任务名称不能为空");
-                return false;
-            }
-            return true;
-        }
-        private void ValidateQuestId(QuestConfigData data)
-        {
-            if (data == null)
-                return;
-            string questIdInput = EditorGUILayout.TextField("任务 Id", data.questId.ToString());
-            if (int.TryParse(questIdInput, out int newId))
-                data.questId = newId;
-            else
-                ShowErrorMessage("任务 Id只能是正整数");
-        }
-        private bool ValidateShopData(ShopConfigData data)
-        {
-            if (data.shopId <= 0)
-            {
-                ShowErrorMessage("商品 ID必须大于0");
-                return false;
-            }
-            if(_shopConfigs.Any(s => s.shopId == data.shopId && s != data))
-            {
-                ShowErrorMessage("商品 ID必须唯一");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(data.shopName))
-            {
-                ShowErrorMessage("商品名称不能为空");
-                return false;
-            }
-            return true;
-        }
-        private void ValidateShopId(ShopConfigData data)
-        {
-            if (data == null)
-                return;
-            string shopIdInput = EditorGUILayout.TextField("商品 Id", data.shopId.ToString());
-            if (int.TryParse(shopIdInput, out int newId))
-                data.shopId = newId;
-            else
-                ShowErrorMessage("商品 Id只能是正整数");
-        }
-        private bool ValidateCropData(CropConfigData data)
-        {
-            if (data.cropId <= 0)
-            {
-                ShowErrorMessage("作物 ID必须大于0");
-                return false;
-            }
-            if(_cropConfigs.Any(c => c.cropId == data.cropId && c != data))
-            {
-                ShowErrorMessage("作物 ID必须唯一");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(data.cropName))
-            {
-                ShowErrorMessage("作物名称不能为空");
-                return false;
-            }
-            return true;
-        }
-        private void ValidateCropId(CropConfigData data)
-        {
-            if (data == null)
-                return;
-            string cropIdInput = EditorGUILayout.TextField("作物 Id", data.cropId.ToString());
-            if (int.TryParse(cropIdInput, out int newId))
-                data.cropId = newId;
-            else
-                ShowErrorMessage("作物 Id只能是正整数");
-        }
-        private bool ValidateSkillData(SkillConfigData data)
-        {
-            if (data.skillId <= 0)
-            {
-                ShowErrorMessage("技能 ID必须大于0");
-                return false;
-            }
-            if(_skillConfigs.Any(s => s.skillId == data.skillId && s != data))
-            {
-                ShowErrorMessage("技能 ID必须唯一");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(data.skillName))
-            {
-                ShowErrorMessage("技能名称不能为空");
-                return false;
-            }
-            return true;
-        }
-        private void ValidateSkillId(SkillConfigData data)
-        {
-            if (data == null)
-                return;
-            string skillIdInput = EditorGUILayout.TextField("技能 Id", data.skillId.ToString());
-            if (int.TryParse(skillIdInput, out int newId))
-                data.skillId = newId;
-            else
-                ShowErrorMessage("技能 Id只能是正整数");
+            if (_saveNPCSuccess && _saveCropSuccess && _saveQuestSuccess && _saveShopSuccess && _saveSkillSuccess)
+                ShowSuccessMessage("配置均已保存");
+            if (!_saveNPCSuccess)
+                LogError("NPC配置保存失败");
+            if (!_saveCropSuccess)
+                LogError("作物配置保存失败");
+            if (!_saveQuestSuccess)
+                LogError("任务配置保存失败");
+            if (!_saveShopSuccess)
+                LogError("商品配置保存失败");
+            if (!_saveSkillSuccess)
+                LogError("技能配置保存失败");
         }
         #endregion
     }
