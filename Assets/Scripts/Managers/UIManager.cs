@@ -135,7 +135,7 @@ public class UIManager : SingletonMono<UIManager>
                 uiNode.OnOpen(param);
                 LayerDstribute(uiNode);
             }
-            Debug.LogError($"UI界面不存在: {uiName}");
+           // Debug.LogError($"UI界面不存在: {uiName}");
         }
     }
   
