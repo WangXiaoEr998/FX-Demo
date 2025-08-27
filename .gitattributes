@@ -1,4 +1,0 @@
-*.fbx filter=lfs diff=lfs merge=lfs -text
-Assets/Amazing[[:space:]]Assets/* filter=lfs diff=lfs merge=lfs -text
-Assets/Asian[[:space:]]Far[[:space:]]East[[:space:]]Environment/* filter=lfs diff=lfs merge=lfs -text
-Assets/ArtResource/FerociousIndustries/* filter=lfs diff=lfs merge=lfs -text
