@@ -14,10 +14,17 @@ public class PlotInteractionManager : MonoBehaviour
 
     private FarmingSystem _farmingSystem;
     private bool _isInteracting = false; // 防止重复点击
+    private CropType _selectedCropType;  // 当前选中的作物类型
+
+    // 公开属性，供UI访问当前选中的作物类型
+    public CropType SelectedCropType => _selectedCropType;
+    public CropType DefaultPlantCrop => _defaultPlantCrop;
 
     private void Start()
     {
         InitDependencies();
+        // 初始化选中的作物为默认作物
+        _selectedCropType = _defaultPlantCrop;
     }
 
     private void Update()
@@ -85,13 +92,13 @@ public class PlotInteractionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 处理土地交互逻辑（修复：移除对FarmPlotView的直接依赖）
+    /// 处理土地交互逻辑
     /// </summary>
     private void HandlePlotInteraction(Vector3Int plotPos)
     {
         _isInteracting = true;
 
-        // 修复1：使用新的方法名GetPlotData获取地块数据
+        // 获取地块数据
         FarmingSystem.FarmPlot plotData = _farmingSystem.GetPlotData(plotPos);
         if (plotData == null)
         {
@@ -105,10 +112,10 @@ public class PlotInteractionManager : MonoBehaviour
         {
             HarvestTargetPlot(plotData, plotPos);
         }
-        // 分支2：已解锁且未种植 → 种植
+        // 分支2：已解锁且未种植 → 种植（使用当前选中的作物）
         else if (plotData.SoilState == FarmingSystem.PlotState.Unlocked_Empty)
         {
-            PlantOnTargetPlot(plotPos);
+            PlantOnTargetPlot(plotPos, _selectedCropType);
         }
         // 分支3：已种植但未成熟 → 提示
         else if (plotData.IsPlanted && !plotData.IsGrown)
@@ -125,8 +132,8 @@ public class PlotInteractionManager : MonoBehaviour
         _isInteracting = false;
     }
 
-    // 种植逻辑（修复方法调用和属性名）
-    private void PlantOnTargetPlot(Vector3Int plotPos)
+    // 种植逻辑（修改为使用传入的作物类型）
+    private void PlantOnTargetPlot(Vector3Int plotPos, CropType cropType)
     {
         // 强制刷新地块数据
         FarmingSystem.FarmPlot latestPlotData = _farmingSystem.GetPlotData(plotPos);
@@ -136,12 +143,11 @@ public class PlotInteractionManager : MonoBehaviour
             return;
         }
 
-        bool plantSuccess = _farmingSystem.PlantCrop(plotPos, _defaultPlantCrop);
+        bool plantSuccess = _farmingSystem.PlantCrop(plotPos, cropType);
 
         if (plantSuccess)
         {
-            // 修复2：使用新的方法名GetCropConfig获取作物数据
-            FarmingSystem.CropData cropData = _farmingSystem.GetCropConfig(_defaultPlantCrop);
+            FarmingSystem.CropData cropData = _farmingSystem.GetCropConfig(cropType);
             if (cropData != null)
             {
                 Debug.Log($"[PlotInteraction] 种植成功！土地 {plotPos} 种植了 {cropData.Name}（{cropData.GrowthTime}秒成熟）");
@@ -178,5 +184,14 @@ public class PlotInteractionManager : MonoBehaviour
         if (EventSystem.current == null)
             return false;
         return EventSystem.current.IsPointerOverGameObject();
+    }
+
+    /// <summary>
+    /// 设置选中的作物类型（供UI调用）
+    /// </summary>
+    public void SetSelectedCrop(CropType cropType)
+    {
+        _selectedCropType = cropType;
+        Debug.Log($"[PlotInteractionManager] 已选择作物: {cropType}");
     }
 }

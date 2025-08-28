@@ -352,9 +352,9 @@ public class FarmingSystem : BaseGameSystem
     }
 
     /// <summary>
-    /// 同步单个土壤的状态（抽成通用方法，避免重复代码）
+    /// 同步单个土壤的状态（公开方法，供土地开拓使用）
     /// </summary>
-    private void SyncSoilState(Vector3Int plotPos, PlotState targetState)
+    public void SyncSoilState(Vector3Int plotPos, PlotState targetState)
     {
         if (_soilViewMap.TryGetValue(plotPos, out FarmPlotView soilView))
         {
@@ -625,6 +625,22 @@ public class FarmingSystem : BaseGameSystem
     public List<FarmPlot> GetAllActivePlots() => new List<FarmPlot>(_activePlots);
     public List<Vector3Int> GetAllPlotPositions() => new List<Vector3Int>(_allPlotPositions);
     public CropData GetCropConfig(CropType cropType) => _cropConfigMap.TryGetValue(cropType, out var config) ? config : null;
+
+    // 新增：添加新地块（用于土地开拓）
+    public void AddNewPlot(FarmPlot newPlot)
+    {
+        if (!_plotDataMap.ContainsKey(newPlot.Position))
+        {
+            _plotDataMap[newPlot.Position] = newPlot;
+            _activePlots.Add(newPlot);
+        }
+    }
+    public List<CropType> GetAllValidCropTypes()
+    {
+        // 直接返回 _cropConfigMap 的所有键（即已配置的作物类型），排除 None 类型
+        return _cropConfigMap.Keys.Where(type => type != CropType.None).ToList();
+    }
+
     #endregion
 }
 

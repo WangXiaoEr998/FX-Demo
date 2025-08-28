@@ -38,6 +38,7 @@ public class SystemManager : MonoBehaviour
     [SerializeField] private PlayerSystem _playerSystem;
     [SerializeField] private NPCSystem _npcSystem;
     [SerializeField] private FarmingSystem _farmingSystem;
+    [SerializeField] private WeatherSystem _weatherSystem;
     [SerializeField] private CombatSystem _combatSystem;
     [SerializeField] private EconomySystem _economySystem;
     [SerializeField] private QuestSystem _questSystem;
@@ -344,6 +345,10 @@ public class SystemManager : MonoBehaviour
         if (_farmingSystem == null)
             _farmingSystem = gameObject.AddComponent<FarmingSystem>();
         RegisterSystem(_farmingSystem);
+
+        if(_weatherSystem == null)
+            _weatherSystem = gameObject.AddComponent<WeatherSystem>();
+        RegisterSystem(_weatherSystem);
 
         if (_combatSystem == null)
             _combatSystem = gameObject.AddComponent<CombatSystem>();

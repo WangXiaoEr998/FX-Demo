@@ -55,7 +55,9 @@ namespace FanXing.Data
         Cabbage, // 白菜
         Carrot, // 胡萝卜
         Tomato, // 番茄
-        Cucumber // 黄瓜
+        Cucumber, // 黄瓜
+        Apple, //苹果
+        SunFlower, // 向日葵
     }
 
     /// <summary>
