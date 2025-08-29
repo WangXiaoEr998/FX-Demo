@@ -31,8 +31,10 @@ namespace FanXing.Editor
         private List<NPCConfigData> _npcConfigs = new List<NPCConfigData>();
         private NPCConfigData _selectedNPC;
         private int _selectedNPCIndex = -1;
+        // 持久化的 NPC Id 编辑字符串，避免每帧被重置导致无法显示非法输入及 HelpBox
         private string _npcIdInput = string.Empty;
         private bool _saveNPCSuccess = false;
+        private bool _saveNPCConfig = true;
 
         // 任务配置
         private List<QuestConfigData> _questConfigs = new List<QuestConfigData>();
@@ -40,6 +42,7 @@ namespace FanXing.Editor
         private int _selectedQuestIndex = -1;
         private string _questIdInput = string.Empty;
         private bool _saveQuestSuccess = false;
+        private bool _saveQuestConfig = true;
 
         // 商店配置
         private List<ShopConfigData> _shopConfigs = new List<ShopConfigData>();
@@ -47,6 +50,7 @@ namespace FanXing.Editor
         private int _selectedShopIndex = -1;
         private string _shopIdInput = string.Empty;
         private bool _saveShopSuccess = false;
+        private bool _saveShopConfig = true;
 
         // 作物配置
         private List<CropConfigData> _cropConfigs = new List<CropConfigData>();
@@ -54,6 +58,7 @@ namespace FanXing.Editor
         private int _selectedCropIndex = -1;
         private string _cropIdInput = string.Empty;
         private bool _saveCropSuccess = false;
+        private bool _saveCropConfig = true;
 
         // 技能配置
         private List<SkillConfigData> _skillConfigs = new List<SkillConfigData>();
@@ -61,6 +66,7 @@ namespace FanXing.Editor
         private int _selectedSkillIndex = -1;
         private string _skillIdInput = string.Empty;
         private bool _saveSkillSuccess = false;
+        private bool _saveSkillConfig = true;
         #endregion
 
         protected override void OnDisable()
@@ -78,14 +84,14 @@ namespace FanXing.Editor
             LoadCropConfigs();
             LoadSkillConfigs();
         }
-
+        
         protected override void SaveData()
         {
-            SaveNPCConfigs(false);
-            SaveQuestConfigs(false);
-            SaveShopConfigs(false);
-            SaveCropConfigs(false);
-            SaveSkillConfigs(false);
+            SaveNPCConfigs(_saveNPCConfig, false);
+            SaveQuestConfigs(_saveQuestConfig, false);
+            SaveShopConfigs(_saveShopConfig, false);
+            SaveCropConfigs(_saveCropConfig, false);
+            SaveSkillConfigs(_saveSkillConfig, false);
         }
         #endregion
 
@@ -167,7 +173,7 @@ namespace FanXing.Editor
         private void DrawNPCDetails()
         {
             DrawHeader("NPC详细配置");
-            // 使用持久化的 _npcIdEditing 用来支持非法中间状态并显示 HelpBox
+
             if (string.IsNullOrEmpty(_npcIdInput))
                 _npcIdInput = _selectedNPC.npcId.ToString();
             _npcIdInput = EditorGUILayout.TextField(new GUIContent("NPC Id", "请输入正整数作为NPC的唯一标识"), _npcIdInput);
@@ -177,15 +183,18 @@ namespace FanXing.Editor
                 bool duplicate = _npcConfigs.Any(n => n != _selectedNPC && n.npcId == parsedId);
                 if (duplicate)
                 {
+                    _saveNPCConfig = false;
                     EditorGUILayout.HelpBox($"ID {parsedId} 已存在，不能重复", MessageType.Error);
                 }
                 else
                 {
+                    _saveNPCConfig = true;
                     _selectedNPC.npcId = parsedId; // 只有合法且不重复才写回
                 }
             }
             else
             {
+                _saveNPCConfig = false;
                 EditorGUILayout.HelpBox("NPC Id必须是正整数", MessageType.Error);
             }
             _selectedNPC.npcName = EditorGUILayout.TextField("NPC名称", _selectedNPC.npcName);
@@ -197,8 +206,11 @@ namespace FanXing.Editor
             EditorGUILayout.Space(10);
             DrawButtonGroup(
                 ("保存配置", () =>
-                {         
-                    SaveNPCConfigs(true);
+                {
+                    if (_saveNPCConfig)
+                        SaveNPCConfigs(true);
+                    else
+                        EditorUtility.DisplayDialog("错误", "Id格式输入错误", "确定");
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_npcConfigs, "npc_config"))
@@ -300,15 +312,18 @@ namespace FanXing.Editor
                 bool duplicate = _questConfigs.Any(q => q != _selectedQuest && q.questId == parsedId);
                 if (duplicate)
                 {
+                    _saveQuestConfig = false;
                     EditorGUILayout.HelpBox($"ID{parsedId}已存在，不能重复", MessageType.Error);
                 }
                 else
                 {
+                    _saveQuestConfig = true;
                     _selectedQuest.questId = parsedId;
                 }
             }
             else
             {
+                _saveQuestConfig = false;
                 EditorGUILayout.HelpBox("任务 Id必须是正整数", MessageType.Error);
             }
             _selectedQuest.questName = EditorGUILayout.TextField("任务名称", _selectedQuest.questName);
@@ -320,8 +335,11 @@ namespace FanXing.Editor
             EditorGUILayout.Space(10);
             DrawButtonGroup(
              ("保存配置", () =>
-             {              
-                 SaveQuestConfigs(true);           
+             {
+                 if (_saveQuestConfig)
+                     SaveQuestConfigs(true);
+                 else
+                     EditorUtility.DisplayDialog("错误", "Id格式输入错误", "确定");
              }
             ),
              ("导出JSON", () => ExportJsonConfig(_questConfigs, "quest_config"))
@@ -421,15 +439,18 @@ namespace FanXing.Editor
                 bool duplicate = _shopConfigs.Any(s => s != _selectedShop && s.shopId == parsedId);
                 if (duplicate)
                 {
+                    _saveShopConfig = false;
                     EditorGUILayout.HelpBox($"ID{parsedId}已存在，不能重复", MessageType.Error);
                 }
                 else
                 {
+                    _saveShopConfig = true;
                     _selectedShop.shopId = parsedId;
                 }
             }
             else
             {
+                _saveShopConfig = false;
                 EditorGUILayout.HelpBox("商品 Id必须是正整数", MessageType.Error);
             }
             _selectedShop.shopName = EditorGUILayout.TextField("商品名称", _selectedShop.shopName);
@@ -441,7 +462,10 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    SaveShopConfigs(true);
+                    if (_saveShopConfig)
+                        SaveShopConfigs(true);
+                    else
+                        EditorUtility.DisplayDialog("错误", "Id格式输入错误", "确定");
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_shopConfigs, "shop_config"))
@@ -538,15 +562,18 @@ namespace FanXing.Editor
                 bool duplicate = _cropConfigs.Any(c => c != _selectedCrop && c.cropId == parsedId);
                 if (duplicate)
                 {
+                    _saveCropConfig = false;
                     EditorGUILayout.HelpBox($"Id{parsedId}已存在，不能重复", MessageType.Error);
                 }
                 else
                 {
+                    _saveCropConfig = true;
                     _selectedCrop.cropId = parsedId;
                 }
             }
             else
             {
+                _saveCropConfig= false;
                 EditorGUILayout.HelpBox("作物Id必须是正整数", MessageType.Error);
             }
             _selectedCrop.cropName = EditorGUILayout.TextField("作物名称", _selectedCrop.cropName);
@@ -558,7 +585,10 @@ namespace FanXing.Editor
             DrawButtonGroup(
                 ("保存配置", () =>
                 {
-                    SaveCropConfigs(true);
+                    if (_saveCropConfig)
+                        SaveCropConfigs(true);
+                    else
+                        EditorUtility.DisplayDialog("错误", "Id格式输入错误", "确定");
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_cropConfigs, "crop_config"))
@@ -657,15 +687,18 @@ namespace FanXing.Editor
                 bool duplicate = _skillConfigs.Any(s => s != _selectedSkill && s.skillId == parsedId);
                 if (duplicate)
                 {
+                    _saveSkillConfig = false;
                     EditorGUILayout.HelpBox($"Id{parsedId}已存在，不能重复", MessageType.Error);
                 }
                 else
                 {
+                    _saveSkillConfig= true;
                     _selectedSkill.skillId = parsedId;
                 }
             }
             else
             {
+                _saveSkillConfig = false;
                 EditorGUILayout.HelpBox("技能Id必须是正整数", MessageType.Error);
             }
             _selectedSkill.skillName = EditorGUILayout.TextField("技能名称", _selectedSkill.skillName);
@@ -675,8 +708,11 @@ namespace FanXing.Editor
             EditorGUILayout.Space(10);
             DrawButtonGroup(
                 ("保存配置", () =>
-                {                    
-                    SaveSkillConfigs(true);       
+                {
+                    if (_saveSkillConfig)
+                        SaveSkillConfigs(true);
+                    else
+                        EditorUtility.DisplayDialog("错误", "Id格式输入错误", "确定");
                 }
             ),
                 ("导出JSON", () => ExportJsonConfig(_skillConfigs, "skill_config"))
@@ -724,75 +760,99 @@ namespace FanXing.Editor
             _npcConfigs = ImportJsonConfig<List<NPCConfigData>>("npc_config") ?? new List<NPCConfigData>();
         }
 
-        private void SaveNPCConfigs(bool showDialog = true)
+        private void SaveNPCConfigs(bool saveConfigs, bool showDialog = true)
         {
-            ExportJsonConfig(_npcConfigs, "npc_config");
-            if(showDialog)
-                ShowSuccessMessage("NPC配置已保存!");
-            _saveNPCSuccess = true;
+            if (saveConfigs)
+            {
+                ExportJsonConfig(_npcConfigs, "npc_config");
+                if (showDialog)
+                    ShowSuccessMessage("NPC配置已保存!");
+                _saveNPCSuccess = true;
+            }
         }
 
         private void LoadQuestConfigs()
         {
             _questConfigs = ImportJsonConfig<List<QuestConfigData>>("quest_config") ?? new List<QuestConfigData>();
         }
-        private void SaveQuestConfigs(bool showDialog = true)
+        private void SaveQuestConfigs(bool saveConfigs,bool showDialog = true)
         {
-            ExportJsonConfig(_questConfigs, "quest_config");
-            if(showDialog)
-                ShowSuccessMessage("任务配置已保存!");
-            _saveQuestSuccess = true;
+            if (saveConfigs)
+            {
+                ExportJsonConfig(_questConfigs, "quest_config");
+                if (showDialog)
+                    ShowSuccessMessage("任务配置已保存!");
+                _saveQuestSuccess = true;
+            }
         }
         private void LoadShopConfigs()
         {
             _shopConfigs = ImportJsonConfig<List<ShopConfigData>>("shop_config") ?? new List<ShopConfigData>();
         }
-        private void SaveShopConfigs(bool showDialog = true)
+        private void SaveShopConfigs(bool saveConfigs,bool showDialog = true)
         {
-            ExportJsonConfig(_shopConfigs, "shop_config");
-            if(showDialog)
-                ShowSuccessMessage("商品配置已保存!");
-            _saveShopSuccess = true;
+            if (saveConfigs)
+            {
+                ExportJsonConfig(_shopConfigs, "shop_config");
+                if (showDialog)
+                    ShowSuccessMessage("商品配置已保存!");
+                _saveShopSuccess = true;
+            }
         }
         private void LoadCropConfigs()
         {
             _cropConfigs = ImportJsonConfig<List<CropConfigData>>("crop_config") ?? new List<CropConfigData>();
         }
-        private void SaveCropConfigs(bool showDialog = true)
+        private void SaveCropConfigs(bool saveConfigs,bool showDialog = true)
         {
-            ExportJsonConfig(_cropConfigs, "crop_config");
-            if (showDialog)
-                 ShowSuccessMessage("作物配置已保存!");
-            _saveCropSuccess = true;
+            if (saveConfigs)
+            {
+                ExportJsonConfig(_cropConfigs, "crop_config");
+                if (showDialog)
+                    ShowSuccessMessage("作物配置已保存!");
+                _saveCropSuccess = true;
+            }
         }
         private void LoadSkillConfigs()
         {
             _skillConfigs = ImportJsonConfig<List<SkillConfigData>>("skill_config") ?? new List<SkillConfigData>();
         }
-        private void SaveSkillConfigs(bool showDialog = true)
+        private void SaveSkillConfigs(bool saveConfigs,bool showDialog = true)
         {
-            ExportJsonConfig(_skillConfigs, "skill_config");
-            if (showDialog)
-                ShowSuccessMessage("技能配置已保存!");
-            _saveSkillSuccess = true;
+            if (saveConfigs)
+            {
+                ExportJsonConfig(_skillConfigs, "skill_config");
+                if (showDialog)
+                    ShowSuccessMessage("技能配置已保存!");
+                _saveSkillSuccess = true;
+            }
         }
         #endregion
 
         #region 显示保存结果
         private void ShowSaveResult()
         {
+            List<string> showErrorMessage = new List<string>();
+            string showResult = null;
             if (_saveNPCSuccess && _saveCropSuccess && _saveQuestSuccess && _saveShopSuccess && _saveSkillSuccess)
                 ShowSuccessMessage("配置均已保存");
+            if (!_saveNPCSuccess && !_saveCropSuccess && !_saveQuestSuccess && !_saveShopSuccess && !_saveSkillSuccess)
+            {
+                ShowErrorMessage("配置全部保存失败");
+                return;
+            }
             if (!_saveNPCSuccess)
-                LogError("NPC配置保存失败");
+                showErrorMessage.Add("NPC配置");
             if (!_saveCropSuccess)
-                LogError("作物配置保存失败");
+                showErrorMessage.Add("作物配置");
             if (!_saveQuestSuccess)
-                LogError("任务配置保存失败");
+                showErrorMessage.Add("任务配置");
             if (!_saveShopSuccess)
-                LogError("商品配置保存失败");
+                showErrorMessage.Add("商品配置");
             if (!_saveSkillSuccess)
-                LogError("技能配置保存失败");
+                showErrorMessage.Add("技能配置");
+            showResult = string.Join("、 ", showErrorMessage);
+            ShowErrorMessage(showResult + "保存失败,其他保存成功");
         }
         #endregion
     }
