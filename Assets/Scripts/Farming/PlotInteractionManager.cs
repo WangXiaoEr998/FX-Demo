@@ -1,6 +1,7 @@
 using FanXing.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System;
 
 /// <summary>
 /// 3D土地点击交互管理器：处理点击3D土地触发种植/收获逻辑
@@ -54,20 +55,13 @@ public class PlotInteractionManager : MonoBehaviour
         }
 
         // 获取种田系统
-        _farmingSystem = FindObjectOfType<FarmingSystem>();
+        _farmingSystem = Global.Farming;//FindObjectOfType<FarmingSystem>();
         if (_farmingSystem == null)
         {
             Debug.LogError("[PlotInteractionManager] 场景中未找到FarmingSystem！");
             enabled = false;
             return;
         }
-
-        // 3D场景推荐使用透视投影
-        if (_farmCamera.orthographic)
-        {
-            Debug.LogWarning("[PlotInteractionManager] 3D场景建议使用透视投影相机，当前为正交投影可能影响交互体验");
-        }
-
         Debug.Log("[PlotInteractionManager] 3D交互管理器初始化完成");
     }
 
@@ -113,7 +107,7 @@ public class PlotInteractionManager : MonoBehaviour
             HarvestTargetPlot(plotData, plotPos);
         }
         // 分支2：已解锁且未种植 → 种植（使用当前选中的作物）
-        else if (plotData.SoilState == FarmingSystem.PlotState.Unlocked_Empty)
+        else if (plotData.SoilState == PlotState.Unlocked_Empty)
         {
             PlantOnTargetPlot(plotPos, _selectedCropType);
         }
@@ -124,7 +118,7 @@ public class PlotInteractionManager : MonoBehaviour
             Debug.Log($"[PlotInteraction] 土地 {plotPos} 作物正在生长（{growthPercent}%）");
         }
         // 分支4：未解锁 → 提示
-        else if (plotData.SoilState == FarmingSystem.PlotState.Locked)
+        else if (plotData.SoilState == PlotState.Locked)
         {
             Debug.Log($"[PlotInteraction] 土地 {plotPos} 未解锁（需要解锁后使用）");
         }
@@ -145,35 +139,35 @@ public class PlotInteractionManager : MonoBehaviour
 
         bool plantSuccess = _farmingSystem.PlantCrop(plotPos, cropType);
 
-        if (plantSuccess)
-        {
-            FarmingSystem.CropData cropData = _farmingSystem.GetCropConfig(cropType);
-            if (cropData != null)
-            {
-                Debug.Log($"[PlotInteraction] 种植成功！土地 {plotPos} 种植了 {cropData.Name}（{cropData.GrowthTime}秒成熟）");
-            }
-            else
-            {
-                Debug.Log($"[PlotInteraction] 种植成功！土地 {plotPos}（未找到作物数据）");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"[PlotInteraction] 种植失败！土地 {plotPos} 无法种植");
-        }
+        //if (plantSuccess)
+        //{
+        //    FarmingSystem.CropData cropData = _farmingSystem.GetCropConfig(cropType);
+        //    if (cropData != null)
+        //    {
+        //        Debug.Log($"[PlotInteraction] 种植成功！土地 {plotPos} 种植了 {cropData.Name}（{cropData.GrowthTime}秒成熟）");
+        //    }
+        //    else
+        //    {
+        //        Debug.Log($"[PlotInteraction] 种植成功！土地 {plotPos}（未找到作物数据）");
+        //    }
+        //}
+        //else
+        //{
+        //    Debug.LogWarning($"[PlotInteraction] 种植失败！土地 {plotPos} 无法种植");
+        //}
     }
 
     private void HarvestTargetPlot(FarmingSystem.FarmPlot plotData, Vector3Int plotPos)
     {
         ItemData harvestedItem = _farmingSystem.HarvestCrop(plotPos);
-        if (harvestedItem != null)
-        {
-            Debug.Log($"[PlotInteraction] 收获成功！土地 {plotPos} 获得 {harvestedItem.itemName} x{harvestedItem.currentStack}");
-        }
-        else
-        {
-            Debug.LogWarning($"[PlotInteraction] 收获失败！土地 {plotPos} 无成熟作物");
-        }
+        //if (harvestedItem != null)
+        //{
+        //    Debug.Log($"[PlotInteraction] 收获成功！土地 {plotPos} 获得 {harvestedItem.itemName} x{harvestedItem.currentStack}");
+        //}
+        //else
+        //{
+        //    Debug.LogWarning($"[PlotInteraction] 收获失败！土地 {plotPos} 无成熟作物");
+        //}
     }
 
     /// <summary>

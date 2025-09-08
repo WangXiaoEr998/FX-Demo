@@ -719,4 +719,154 @@ public class CropHarvestedEventArgs
         HarvestTime = DateTime.Now;
     }
 }
+/// <summary>
+/// 作物成熟事件参数
+/// 当作物从种植状态达到成熟状态时触发
+/// </summary>
+[Serializable]
+public class CropGrownEventArgs
+{
+    /// <summary>
+    /// 成熟的作物类型
+    /// </summary>
+    public CropType CropType { get; private set; }
+    
+    /// <summary>
+    /// 作物所在的农田位置
+    /// </summary>
+    public Vector3Int PlotPosition { get; private set; }
+    
+    /// <summary>
+    /// 作物从种植到成熟的生长时间（秒）
+    /// </summary>
+    public float GrowthDuration { get; private set; }
+    
+    /// <summary>
+    /// 作物成熟时的产量（预估值）
+    /// </summary>
+    public int EstimatedYield { get; private set; }
+    
+    /// <summary>
+    /// 事件触发的时间戳
+    /// </summary>
+    public DateTime GrowTime { get; private set; }
+
+    /// <summary>
+    /// 构造函数：初始化作物成熟事件的所有必要数据
+    /// </summary>
+    /// <param name="cropType">作物类型</param>
+    /// <param name="plotPosition">农田位置</param>
+    /// <param name="growthDuration">生长时长（秒）</param>
+    /// <param name="estimatedYield">预估产量</param>
+    public CropGrownEventArgs(CropType cropType, Vector3Int plotPosition, float growthDuration, int estimatedYield)
+    {
+        CropType = cropType;
+        PlotPosition = plotPosition;
+        GrowthDuration = growthDuration;
+        EstimatedYield = estimatedYield;
+        GrowTime = DateTime.Now; // 自动记录成熟时间
+    }
+}
+#endregion
+
+#region 农田创建事件参数
+/// <summary>
+/// 农田创建事件参数
+/// 当新的可种植农田地块被解锁或创建时触发
+/// </summary>
+[Serializable]
+public class FarmPlotCreatedEventArgs
+{
+    /// <summary>
+    /// 新创建的农田唯一ID
+    /// </summary>
+    public string PlotId { get; private set; }
+    
+    /// <summary>
+    /// 农田在世界中的网格位置
+    /// </summary>
+    public Vector3Int PlotPosition { get; private set; }
+    
+    /// <summary>
+    /// 农田的初始状态（如：未开垦/已开垦/湿润）
+    /// </summary>
+    public PlotState InitialState { get; private set; }
+    
+    /// <summary>
+    /// 创建农田的玩家名称
+    /// </summary>
+    public string CreatorName { get; private set; }
+    
+    /// <summary>
+    /// 事件触发的时间戳
+    /// </summary>
+    public DateTime CreationTime { get; private set; }
+
+    /// <summary>
+    /// 构造函数：初始化农田创建事件的所有必要数据
+    /// </summary>
+    /// <param name="plotId">农田ID</param>
+    /// <param name="plotPosition">农田位置</param>
+    /// <param name="initialState">初始状态</param>
+    /// <param name="creatorName">创建者名称</param>
+    public FarmPlotCreatedEventArgs(string plotId, Vector3Int plotPosition, PlotState initialState, string creatorName)
+    {
+        PlotId = plotId;
+        PlotPosition = plotPosition;
+        InitialState = initialState;
+        CreatorName = creatorName;
+        CreationTime = DateTime.Now; // 自动记录创建时间
+    }
+}
+#endregion
+
+#region 农田销毁事件参数
+/// <summary>
+/// 农田销毁事件参数
+/// 当农田地块被移除或摧毁时触发（如：被破坏/回收）
+/// </summary>
+[Serializable]
+public class FarmPlotDestroyedEventArgs
+{
+    /// <summary>
+    /// 被销毁的农田唯一ID
+    /// </summary>
+    public string PlotId { get; private set; }
+    
+    /// <summary>
+    /// 农田在世界中的网格位置
+    /// </summary>
+    public Vector3Int PlotPosition { get; private set; }
+    
+    /// <summary>
+    /// 农田销毁的原因（如：自然损坏/玩家拆除/战斗破坏）
+    /// </summary>
+    public string DestroyReason { get; private set; }
+    
+    /// <summary>
+    /// 农田销毁时是否有未收获的作物
+    /// </summary>
+    public bool HasUnharvestedCrop { get; private set; }
+    
+    /// <summary>
+    /// 事件触发的时间戳
+    /// </summary>
+    public DateTime DestroyTime { get; private set; }
+
+    /// <summary>
+    /// 构造函数：初始化农田销毁事件的所有必要数据
+    /// </summary>
+    /// <param name="plotId">农田ID</param>
+    /// <param name="plotPosition">农田位置</param>
+    /// <param name="destroyReason">销毁原因</param>
+    /// <param name="hasUn harvestedCrop">是否有未收获作物</param>
+    public FarmPlotDestroyedEventArgs(string plotId, Vector3Int plotPosition, string destroyReason, bool hasUnharvestedCrop)
+    {
+        PlotId = plotId;
+        PlotPosition = plotPosition;
+        DestroyReason = destroyReason;
+        HasUnharvestedCrop = hasUnharvestedCrop;
+        DestroyTime = DateTime.Now; // 自动记录销毁时间
+    }
+}
 #endregion

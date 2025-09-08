@@ -8,7 +8,7 @@ using UnityEngine;
 /// 种田系统：负责农田网格管理、作物种植/生长/收获的业务逻辑（不直接处理土壤视觉，仅通过FarmPlotView间接控制）
 /// 作者：黄畅修
 /// 创建时间：2025-07-13
-/// 优化点：1. 移除无效调用 2. 硬编码转配置 3. 容错强化 4. 代码结构规整 5. 内存管理优化
+/// 优化点：1. 移除无效调用 2. 硬编码转配置 3. 容错强化 4. 代码结构规整 5. 内存管理优化 6. 集成Global事件系统
 /// </summary>
 public class FarmingSystem : BaseGameSystem
 {
@@ -57,19 +57,22 @@ public class FarmingSystem : BaseGameSystem
     [System.Serializable]
     public class FarmPlot
     {
-        public Vector3Int Position;          // 地块世界坐标
-        public CropType CropType;            // 当前种植的作物类型
-        public float PlantTime;              // 种植时间（Time.time）
-        public float GrowthProgress;         // 生长进度（0~1）
-        public bool IsPlanted;               // 是否已种植
-        public bool IsGrown;                 // 是否成熟
-        public GameObject CropInstance;      // 作物实例（场景中的GameObject）
-        public GameObject PestInstance;      // 预留：害虫实例（暂未实现）
-        public PlotState SoilState;          // 土壤状态（用于同步土壤视觉）
+        public string PlotId { get; private set; } // 新增：地块唯一ID（用于事件标识）
+        public Vector3Int Position;                // 地块世界坐标
+        public CropType CropType;                  // 当前种植的作物类型
+        public float PlantTime;                    // 种植时间（Time.time）
+        public float GrowthProgress;               // 生长进度（0~1）
+        public bool IsPlanted;                     // 是否已种植
+        public bool IsGrown;                       // 是否成熟
+        public GameObject CropInstance;            // 作物实例（场景中的GameObject）
+        public GameObject PestInstance;            // 预留：害虫实例（暂未实现）
+        public PlotState SoilState;                // 土壤状态（用于同步土壤视觉）
 
         public FarmPlot(Vector3Int pos)
         {
             Position = pos;
+            // 新增：生成唯一地块ID（格式：Plot_X_Z，确保不重复）
+            PlotId = $"Plot_{pos.x}_{pos.z}";
             CropType = CropType.None;
             PlantTime = 0f;
             GrowthProgress = 0f;
@@ -106,15 +109,7 @@ public class FarmingSystem : BaseGameSystem
         public AnimationClip Animation;                // 该阶段的动画（预留）
     }
 
-    /// <summary>
-    /// 土壤状态枚举（与FarmPlotView视觉状态一一对应）
-    /// </summary>
-    public enum PlotState
-    {
-        Locked,          // 未解锁（灰色/带锁）
-        Unlocked_Empty,  // 已解锁未种植（普通土壤）
-        Unlocked_Planted // 已解锁已种植（翻耕土壤）
-    }
+
     #endregion
 
     #region 系统基础属性（保留原有，优化命名）
@@ -137,9 +132,9 @@ public class FarmingSystem : BaseGameSystem
             GenerateAllPlotPositions();
             // 4. 生成土壤预制体（仅视觉，无业务逻辑）
             SpawnAllSoilPrefabs();
-            // 5. 初始化初始解锁地块
+            // 5. 初始化初始解锁地块（会触发农田创建事件）
             InitStartingPlots();
-            // 6. 注册事件（预留框架）
+            // 6. 注册事件（预留框架，若需监听其他系统事件可在此添加）
             RegisterEvents();
 
             LogDebug($"=== 种田系统初始化完成 | 总地块数：{_allPlotPositions.Count} | 初始解锁：{_initialPlotCount} ===");
@@ -164,7 +159,7 @@ public class FarmingSystem : BaseGameSystem
         _growthTimer += deltaTime;
         if (_growthTimer >= _growthUpdateInterval)
         {
-            UpdateAllCropGrowth();  // 更新所有作物生长
+            UpdateAllCropGrowth();  // 更新所有作物生长（会触发作物成熟事件）
             SyncSoilVisualState();  // 同步土壤视觉（仅状态，不含作物）
             _growthTimer = 0f;
         }
@@ -175,6 +170,9 @@ public class FarmingSystem : BaseGameSystem
     /// </summary>
     private void OnDestroy()
     {
+        // 新增：销毁所有活跃地块时触发农田销毁事件
+        TriggerAllPlotsDestroyEvent();
+
         ClearAllCropInstances();
         ClearAllSoilPrefabs();
         UnregisterEvents();
@@ -182,9 +180,9 @@ public class FarmingSystem : BaseGameSystem
     }
     #endregion
 
-    #region 核心业务逻辑（优化代码复用，移除无效调用）
+    #region 核心业务逻辑（集成事件系统：种植/成熟/收获触发事件）
     /// <summary>
-    /// 种植作物（优化逻辑：先判空→再判断状态→最后执行种植）
+    /// 种植作物（优化逻辑：先判空→再判断状态→最后执行种植，新增触发CROP_PLANTED事件）
     /// </summary>
     public bool PlantCrop(Vector3Int plotPos, CropType cropType)
     {
@@ -238,12 +236,15 @@ public class FarmingSystem : BaseGameSystem
         // 6. 同步土壤视觉状态（仅切换土壤材质，不含作物）
         SyncSoilState(plotPos, PlotState.Unlocked_Planted);
 
+        // 7. 新增：触发「作物种植事件」（使用CropPlantedEventArgs）
+        TriggerCropPlantedEvent(newPlot, cropConfig);
+
         LogDebug($"种植成功：地块（{plotPos}）| 作物：{cropConfig.Name} | 成熟时间：{cropConfig.GrowthTime}秒");
         return true;
     }
 
     /// <summary>
-    /// 收获作物（优化：清理资源→重置状态→同步视觉）
+    /// 收获作物（优化：清理资源→重置状态→同步视觉，新增触发CROP_HARVESTED事件）
     /// </summary>
     public ItemData HarvestCrop(Vector3Int plotPos)
     {
@@ -264,14 +265,18 @@ public class FarmingSystem : BaseGameSystem
             return null;
         }
 
-        // 2. 清理作物实例
+        // 2. 记录收获数据（用于事件参数）
+        int harvestQuantity = cropConfig.BaseYield;
+        string currentPlayerName = Global.CurrentPlayerData?.playerName ?? "UnknownPlayer";
+
+        // 3. 清理作物实例
         if (plot.CropInstance != null)
         {
             Destroy(plot.CropInstance); // 运行时用Destroy，避免编辑器卡顿
             plot.CropInstance = null;
         }
 
-        // 3. 重置地块状态
+        // 4. 重置地块状态
         plot.IsPlanted = false;
         plot.IsGrown = false;
         plot.CropType = CropType.None;
@@ -279,24 +284,27 @@ public class FarmingSystem : BaseGameSystem
         plot.PlantTime = 0f;
         plot.SoilState = PlotState.Unlocked_Empty;
 
-        // 4. 同步土壤视觉（恢复为空土地）
+        // 5. 同步土壤视觉（恢复为空土地）
         SyncSoilState(plotPos, PlotState.Unlocked_Empty);
 
-        // 5. 生成收获物品
+        // 6. 新增：触发「作物收获事件」（使用CropHarvestedEventArgs）
+        TriggerCropHarvestedEvent(plot, harvestQuantity, currentPlayerName);
+
+        // 7. 生成收获物品
         ItemData harvestedItem = new ItemData
         {
             itemName = cropConfig.Name,
             itemType = ItemType.Consumable,
-            currentStack = cropConfig.BaseYield,
+            currentStack = harvestQuantity,
             sellPrice = cropConfig.SellPrice
         };
 
-        LogDebug($"收获成功：地块（{plotPos}）| 作物：{cropConfig.Name} | 数量：{cropConfig.BaseYield} | 价值：{cropConfig.SellPrice * cropConfig.BaseYield}金币");
+        LogDebug($"收获成功：地块（{plotPos}）| 作物：{cropConfig.Name} | 数量：{harvestQuantity} | 价值：{cropConfig.SellPrice * harvestQuantity}金币");
         return harvestedItem;
     }
 
     /// <summary>
-    /// 更新所有作物生长状态（优化：仅处理未成熟作物，减少计算）
+    /// 更新所有作物生长状态（优化：仅处理未成熟作物，减少计算，新增触发CROP_GROWN事件）
     /// </summary>
     private void UpdateAllCropGrowth()
     {
@@ -322,12 +330,15 @@ public class FarmingSystem : BaseGameSystem
                 isStageChanged = cropId == null || cropId.CurrentStage != targetStage;
             }
 
-            // 4. 处理成熟逻辑
-            if (plot.GrowthProgress >= 1f)
+            // 4. 处理成熟逻辑（新增：成熟时触发CROP_GROWN事件）
+            if (plot.GrowthProgress >= 1f && !plot.IsGrown)
             {
                 plot.IsGrown = true;
                 isStageChanged = true;
                 LogDebug($"作物成熟：地块（{plot.Position}）| 作物：{cropConfig.Name}");
+
+                // 触发「作物成熟事件」（使用CropGrownEventArgs）
+                TriggerCropGrownEvent(plot, cropConfig, elapsedTime);
             }
 
             // 5. 阶段变化时更新作物外观
@@ -336,6 +347,188 @@ public class FarmingSystem : BaseGameSystem
                 UpdateCropStage(plot, targetStage);
             }
         }
+    }
+    #endregion
+
+    #region 农田管理（新增：创建/销毁地块触发事件）
+    /// <summary>
+    /// 初始化初始解锁地块（仅数据，不生成视觉，新增触发FarmPlotCreated事件）
+    /// </summary>
+    private void InitStartingPlots()
+    {
+        ClearAllPlotData();
+        int actualInitCount = Mathf.Min(_initialPlotCount, _allPlotPositions.Count);
+        string currentPlayerName = Global.CurrentPlayerData?.playerName ?? "System";
+
+        for (int i = 0; i < actualInitCount; i++)
+        {
+            Vector3Int plotPos = _allPlotPositions[i];
+            FarmPlot newPlot = new FarmPlot(plotPos)
+            {
+                SoilState = PlotState.Unlocked_Empty
+            };
+
+            _activePlots.Add(newPlot);
+            _plotDataMap[plotPos] = newPlot;
+            SyncSoilState(plotPos, PlotState.Unlocked_Empty); // 同步为未种植状态
+
+            // 新增：触发「农田创建事件」（使用FarmPlotCreatedEventArgs）
+            TriggerFarmPlotCreatedEvent(newPlot, currentPlayerName);
+        }
+    }
+
+    /// <summary>
+    /// 新增：添加新地块（用于土地开拓，触发FarmPlotCreated事件）
+    /// </summary>
+    public void AddNewPlot(FarmPlot newPlot)
+    {
+        if (!_plotDataMap.ContainsKey(newPlot.Position))
+        {
+            _plotDataMap[newPlot.Position] = newPlot;
+            _activePlots.Add(newPlot);
+            SyncSoilState(newPlot.Position, newPlot.SoilState);
+
+            // 触发「农田创建事件」（使用FarmPlotCreatedEventArgs）
+            string currentPlayerName = Global.CurrentPlayerData?.playerName ?? "UnknownPlayer";
+            TriggerFarmPlotCreatedEvent(newPlot, currentPlayerName);
+
+            LogDebug($"新增农田：{newPlot.PlotId}（位置：{newPlot.Position}）");
+        }
+    }
+
+    /// <summary>
+    /// 新增：销毁指定地块（触发FarmPlotDestroyed事件）
+    /// </summary>
+    public void DestroyPlot(Vector3Int plotPos, string destroyReason = "Manual")
+    {
+        if (_plotDataMap.TryGetValue(plotPos, out FarmPlot plot))
+        {
+            // 记录销毁前的状态（是否有未收获作物）
+            bool hasUnHarvestedCrop = plot.IsPlanted && plot.IsGrown;
+
+            // 清理作物实例
+            if (plot.CropInstance != null)
+            {
+                Destroy(plot.CropInstance);
+                plot.CropInstance = null;
+            }
+
+            // 移除数据记录
+            _activePlots.Remove(plot);
+            _plotDataMap.Remove(plotPos);
+            SyncSoilState(plotPos, PlotState.Locked); // 恢复为未解锁状态
+
+            // 触发「农田销毁事件」（使用FarmPlotDestroyedEventArgs）
+            TriggerFarmPlotDestroyedEvent(plot, destroyReason, hasUnHarvestedCrop);
+
+            LogDebug($"销毁农田：{plot.PlotId}（原因：{destroyReason}，是否有未收获作物：{hasUnHarvestedCrop}）");
+        }
+        else
+        {
+            LogWarning($"销毁失败：未找到地块（位置：{plotPos}）");
+        }
+    }
+
+    /// <summary>
+    /// 新增：场景销毁时触发所有地块的销毁事件
+    /// </summary>
+    private void TriggerAllPlotsDestroyEvent()
+    {
+        string destroyReason = "Scene Destroy";
+        // 遍历所有活跃地块，触发销毁事件
+        foreach (var plot in _activePlots.ToList()) // ToList()避免遍历中修改集合
+        {
+            bool hasUnHarvestedCrop = plot.IsPlanted && plot.IsGrown;
+            TriggerFarmPlotDestroyedEvent(plot, destroyReason, hasUnHarvestedCrop);
+        }
+    }
+    #endregion
+
+    #region 事件触发封装（新增：统一处理5类事件的参数创建与触发）
+    /// <summary>
+    /// 触发「作物种植事件」CROP_PLANTED
+    /// </summary>
+    private void TriggerCropPlantedEvent(FarmPlot plot, CropData cropConfig)
+    {
+        string currentPlayerName = Global.CurrentPlayerData?.playerName ?? "UnknownPlayer";
+        // 创建事件参数实例（复用CropPlantedEventArgs）
+        var eventArgs = new CropPlantedEventArgs(
+            cropType: plot.CropType,
+            position: plot.Position,
+            playerName: currentPlayerName
+        );
+        // 通过Global触发事件
+        Global.TriggerEvent(Global.Events.Farming.CROP_PLANTED, eventArgs);
+    }
+
+    /// <summary>
+    /// 触发「作物成熟事件」CROP_GROWN
+    /// </summary>
+    private void TriggerCropGrownEvent(FarmPlot plot, CropData cropConfig, float growthDuration)
+    {
+        // 创建事件参数实例（复用CropGrownEventArgs）
+        var eventArgs = new CropGrownEventArgs(
+            cropType: plot.CropType,
+            plotPosition: plot.Position,
+            growthDuration: growthDuration, // 实际生长时长（秒）
+            estimatedYield: cropConfig.BaseYield // 预估产量（即基础产量）
+        );
+        // 通过Global触发事件
+        Global.TriggerEvent(Global.Events.Farming.CROP_GROWN, eventArgs);
+    }
+
+    /// <summary>
+    /// 触发「作物收获事件」CROP_HARVESTED
+    /// </summary>
+    private void TriggerCropHarvestedEvent(FarmPlot plot, int harvestQuantity, string playerName)
+    {
+        // 创建事件参数实例（复用CropHarvestedEventArgs）
+        var eventArgs = new CropHarvestedEventArgs(
+            cropType: plot.CropType,
+            quantity: harvestQuantity,
+            position: plot.Position,
+            playerName: playerName
+        );
+        // 通过Global触发事件
+        Global.TriggerEvent(Global.Events.Farming.CROP_HARVESTED, eventArgs);
+    }
+
+    /// <summary>
+    /// 触发「农田创建事件」PLOT_CREATED（自定义事件名，需在Global.Events.Farming中补充）
+    /// </summary>
+    private void TriggerFarmPlotCreatedEvent(FarmPlot plot, string creatorName)
+    {
+        // 1. 先在Global.Events.Farming中补充事件常量（需手动添加，参考其他事件）
+        // public const string PLOT_CREATED = EventConstants.Farming.PLOT_CREATED;
+
+        // 2. 创建事件参数实例（复用FarmPlotCreatedEventArgs）
+        var eventArgs = new FarmPlotCreatedEventArgs(
+            plotId: plot.PlotId,
+            plotPosition: plot.Position,
+            initialState: plot.SoilState,
+            creatorName: creatorName
+        );
+        // 3. 通过Global触发事件
+        Global.TriggerEvent(Global.Events.Farming.PLOT_CREATED, eventArgs);
+    }
+
+    /// <summary>
+    /// 触发「农田销毁事件」PLOT_DESTROYED（自定义事件名，需在Global.Events.Farming中补充）
+    /// </summary>
+    private void TriggerFarmPlotDestroyedEvent(FarmPlot plot, string destroyReason, bool hasUnHarvestedCrop)
+    {
+        // 1. 先在Global.Events.Farming中补充事件常量（需手动添加，参考其他事件）
+        // public const string PLOT_DESTROYED = EventConstants.Farming.PLOT_DESTROYED;
+
+        // 2. 创建事件参数实例（复用FarmPlotDestroyedEventArgs）
+        var eventArgs = new FarmPlotDestroyedEventArgs(
+            plotId: plot.PlotId,
+            plotPosition: plot.Position,
+            destroyReason: destroyReason,
+            hasUnharvestedCrop: hasUnHarvestedCrop
+        );
+        // 3. 通过Global触发事件
+        Global.TriggerEvent(Global.Events.Farming.PLOT_DESTROYED, eventArgs);
     }
     #endregion
 
@@ -499,28 +692,6 @@ public class FarmingSystem : BaseGameSystem
     }
 
     /// <summary>
-    /// 初始化初始解锁地块（仅数据，不生成视觉）
-    /// </summary>
-    private void InitStartingPlots()
-    {
-        ClearAllPlotData();
-        int actualInitCount = Mathf.Min(_initialPlotCount, _allPlotPositions.Count);
-
-        for (int i = 0; i < actualInitCount; i++)
-        {
-            Vector3Int plotPos = _allPlotPositions[i];
-            FarmPlot newPlot = new FarmPlot(plotPos)
-            {
-                SoilState = PlotState.Unlocked_Empty
-            };
-
-            _activePlots.Add(newPlot);
-            _plotDataMap[plotPos] = newPlot;
-            SyncSoilState(plotPos, PlotState.Unlocked_Empty); // 同步为未种植状态
-        }
-    }
-
-    /// <summary>
     /// 实例化作物（抽成通用方法，避免PlantCrop和UpdateCropStage重复代码）
     /// </summary>
     private GameObject SpawnCropInstance(GameObject cropPrefab, Vector3Int plotPos, CropType cropType, GrowthStage stage)
@@ -606,17 +777,18 @@ public class FarmingSystem : BaseGameSystem
     #region 事件与日志（预留框架，规范日志格式）
     private void RegisterEvents()
     {
-        // TODO：后续可添加事件（如作物成熟事件、收获事件）
-        // 示例：EventManager.AddListener<OnCropGrownEvent>(OnCropGrown);
+        // 预留：若需监听其他系统事件（如玩家切换地块权限），可在此注册
+        // 示例：Global.RegisterEvent<PlayerPermissionChangedEventArgs>(Global.Events.Player.PERMISSION_CHANGED, OnPlayerPermissionChanged);
     }
 
     private void UnregisterEvents()
     {
-        // TODO：与RegisterEvents对应，注销事件
+        // 预留：与RegisterEvents对应，注销监听的事件
+        // 示例：Global.UnregisterEvent<PlayerPermissionChangedEventArgs>(Global.Events.Player.PERMISSION_CHANGED, OnPlayerPermissionChanged);
     }
 
-    private void LogDebug(string msg) => Debug.Log($"[FarmingSystem] {msg}");
-    private void LogWarning(string msg) => Debug.LogWarning($"[FarmingSystem] {msg}");
+    private new void LogDebug(string msg) => Debug.Log($"[FarmingSystem] {msg}");
+    private new void LogWarning(string msg) => Debug.LogWarning($"[FarmingSystem] {msg}");
     #endregion
 
     #region 公共查询方法（保留原有，优化命名）
@@ -625,22 +797,11 @@ public class FarmingSystem : BaseGameSystem
     public List<FarmPlot> GetAllActivePlots() => new List<FarmPlot>(_activePlots);
     public List<Vector3Int> GetAllPlotPositions() => new List<Vector3Int>(_allPlotPositions);
     public CropData GetCropConfig(CropType cropType) => _cropConfigMap.TryGetValue(cropType, out var config) ? config : null;
-
-    // 新增：添加新地块（用于土地开拓）
-    public void AddNewPlot(FarmPlot newPlot)
-    {
-        if (!_plotDataMap.ContainsKey(newPlot.Position))
-        {
-            _plotDataMap[newPlot.Position] = newPlot;
-            _activePlots.Add(newPlot);
-        }
-    }
     public List<CropType> GetAllValidCropTypes()
     {
         // 直接返回 _cropConfigMap 的所有键（即已配置的作物类型），排除 None 类型
         return _cropConfigMap.Keys.Where(type => type != CropType.None).ToList();
     }
-
     #endregion
 }
 

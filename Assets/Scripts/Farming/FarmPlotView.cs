@@ -1,3 +1,7 @@
+using FanXing.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -18,7 +22,7 @@ public class FarmPlotView : MonoBehaviour
     /// <summary>
     /// 初始化农田土壤（仅处理土壤相关设置）
     /// </summary>
-    public void Init(Vector3Int gridPos, FarmingSystem.PlotState initialState)
+    public void Init(Vector3Int gridPos, PlotState initialState)
     {
         _gridPosition = gridPos;
         _plotRenderer = GetComponent<MeshRenderer>();
@@ -36,19 +40,19 @@ public class FarmPlotView : MonoBehaviour
     /// <summary>
     /// 更新土壤状态（核心功能：仅切换土壤材质）
     /// </summary>
-    public void UpdatePlotState(FarmingSystem.PlotState newState)
+    public void UpdatePlotState(PlotState newState)
     {
         if (_plotRenderer == null) return;
 
         switch (newState)
         {
-            case FarmingSystem.PlotState.Locked:
+            case PlotState.Locked:
                 _plotRenderer.material = _lockedMaterial;
                 break;
-            case FarmingSystem.PlotState.Unlocked_Empty:
+            case PlotState.Unlocked_Empty:
                 _plotRenderer.material = _emptyMaterial;
                 break;
-            case FarmingSystem.PlotState.Unlocked_Planted:
+            case PlotState.Unlocked_Planted:
                 _plotRenderer.material = _plantedMaterial;
                 break;
         }

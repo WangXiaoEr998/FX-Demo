@@ -41,22 +41,24 @@ public class FarmUIManager : MonoBehaviour
     [Header("配置")]
     [SerializeField] private int _landExpansionCost = 50;     // 每次开拓土地的成本
     [SerializeField] private int _maxExpandablePlots = 5;      // 每次开拓可解锁的最大地块数
-    [SerializeField] private int _weatherSwitchCost = 30;      // 新增：手动切换天气的消耗（金币）
+    //[SerializeField] private int _weatherSwitchCost = 30;      // 新增：手动切换天气的消耗（金币）
 
     private WeatherSystem _weatherSystem;
+    private EconomySystem _economySystem;
     private Dictionary<WeatherSystem.WeatherType, string> _weatherNameTranslations = new Dictionary<WeatherSystem.WeatherType, string>();
     private List<Button> _weatherSwitchButtons = new List<Button>(); // 新增：天气切换按钮列表
     private PlotInteractionManager _plotManager;
     private FarmingSystem _farmingSystem;
     private CropType _selectedCropType;
     private List<Button> _cropButtons = new List<Button>();
-    private int _availableFunds = 200; // 示例资金，实际项目中应从经济系统获取
+    private int _availableFunds; // 示例资金，实际项目中应从经济系统获取
 
     private void Start()
     {
         // 获取系统引用
         _plotManager = FindObjectOfType<PlotInteractionManager>();
-        _farmingSystem = FindObjectOfType<FarmingSystem>();
+        _farmingSystem = Global.Farming;
+        _economySystem = Global.Economy;
 
         if (_plotManager == null || _farmingSystem == null)
         {
@@ -243,49 +245,6 @@ public class FarmUIManager : MonoBehaviour
         RefreshWeatherSwitchButtons(); // 天气自动变化时，同步更新按钮状态
     }
 
-    // ---------------------- 原有方法（无修改，仅保留核心） ----------------------
-    //private void InitCropSelectionButtons()
-    //{
-    //    foreach (var btn in _cropButtons) Destroy(btn.gameObject);
-    //    _cropButtons.Clear();
-
-    //    var cropTypes = Enum.GetValues(typeof(CropType)).Cast<CropType>().Where(t => t != CropType.None).ToList();
-    //    foreach (var cropType in cropTypes)
-    //    {
-    //        var cropData = _farmingSystem.GetCropConfig(cropType);
-    //        if (cropData == null) continue;
-
-    //        GameObject btnObj = Instantiate(_cropButtonPrefab, _cropButtonContainer);
-    //        Button cropBtn = btnObj.GetComponent<Button>();
-    //        TextMeshProUGUI btnText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-    //        if (btnText != null) btnText.text = $"{cropData.Name}\n({cropData.GrowthTime}s)";
-
-    //        CropType currentType = cropType;
-    //        cropBtn.onClick.AddListener(() => OnCropSelected(currentType));
-    //        _cropButtons.Add(cropBtn);
-
-    //        if (currentType == _selectedCropType) SetButtonAsSelected(cropBtn);
-    //    }
-    //}
-
-    //private void OnCropSelected(CropType cropType)
-    //{
-    //    _selectedCropType = cropType;
-    //    _plotManager.SetSelectedCrop(cropType);
-
-    //    foreach (var btn in _cropButtons) SetButtonAsDeselected(btn);
-    //    for (int i = 0; i < _cropButtons.Count; i++)
-    //    {
-    //        var cropTypeInList = (CropType)Enum.GetValues(typeof(CropType)).GetValue(i + 1);
-    //        if (cropTypeInList == cropType)
-    //        {
-    //            SetButtonAsSelected(_cropButtons[i]);
-    //            break;
-    //        }
-    //    }
-    //    UpdateCurrentCropText();
-    //}
-
     private void InitCropSelectionButtons()
     {
         // 清除旧按钮
@@ -368,7 +327,7 @@ public class FarmUIManager : MonoBehaviour
 
     private void OnExpandLandClicked()
     {
-        if (_availableFunds < _landExpansionCost) { ShowNotification("资金不足，无法开拓土地！"); return; }
+        if (!_economySystem.HasEnoughGold(_landExpansionCost)) { ShowNotification("资金不足，无法开拓土地！"); return; }
 
         var allPositions = _farmingSystem.GetAllPlotPositions();
         var activePositions = _farmingSystem.GetAllActivePlots().Select(p => p.Position).ToList();
@@ -380,12 +339,13 @@ public class FarmUIManager : MonoBehaviour
         for (int i = 0; i < plotsToUnlock; i++)
         {
             Vector3Int plotPos = lockedPositions[i];
-            FarmingSystem.FarmPlot newPlot = new FarmingSystem.FarmPlot(plotPos) { SoilState = FarmingSystem.PlotState.Unlocked_Empty };
+            FarmingSystem.FarmPlot newPlot = new FarmingSystem.FarmPlot(plotPos) { SoilState = PlotState.Unlocked_Empty };
             _farmingSystem.AddNewPlot(newPlot);
-            _farmingSystem.SyncSoilState(plotPos, FarmingSystem.PlotState.Unlocked_Empty);
+            _farmingSystem.SyncSoilState(plotPos, PlotState.Unlocked_Empty);
         }
 
-        _availableFunds -= _landExpansionCost;
+        //_availableFunds -= _landExpansionCost;
+        _economySystem.SpendGold(_landExpansionCost);
         ShowNotification($"成功开拓 {plotsToUnlock} 块土地！");
         UpdateExpansionCostText();
     }
@@ -398,7 +358,7 @@ public class FarmUIManager : MonoBehaviour
 
     private void UpdateExpansionCostText()
     {
-        _expansionCostText.text = $"开拓成本: {_landExpansionCost} 金币\n当前资金: {_availableFunds} 金币";
+        _expansionCostText.text = $"开拓成本: {_landExpansionCost} 金币";
     }
 
     private void ShowNotification(string message)

@@ -906,7 +906,6 @@ MonoBehaviour:
   _weatherSwitchPrefab: {fileID: 4098591769283875612, guid: 709bd3d97a6bcf04983330562fa80500, type: 3}
   _landExpansionCost: 50
   _maxExpandablePlots: 1
-  _weatherSwitchCost: 30
 --- !u!4 &450652710
 Transform:
   m_ObjectHideFlags: 0
@@ -1988,6 +1987,57 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1237085976}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1030453527
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1030453529}
+  - component: {fileID: 1030453528}
+  m_Layer: 0
+  m_Name: ShopSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1030453528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030453527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0e01e78812d8ff46bc2eb4af1772e0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enableDebugMode: 0
+  _priority: 0
+  _maxShops: 20
+  _shopUpdateInterval: 300
+  _defaultShopCapacity: 20
+  _shopRentCost: 1000
+  _rentDuration: 86400
+--- !u!4 &1030453529
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030453527}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.561143, y: 7.217494, z: -15.491507}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1053007287
 GameObject:
   m_ObjectHideFlags: 0
@@ -2668,6 +2718,57 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 41.836, y: 0.838, z: 0.559}
+--- !u!1 &1220569552
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1220569554}
+  - component: {fileID: 1220569553}
+  m_Layer: 0
+  m_Name: EconomySystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1220569553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1220569552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81fd18c3a1806374b8574ace3c0a7d79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enableDebugMode: 0
+  _priority: 0
+  _initialPlayerGold: 100
+  _priceFluctuationRate: 0.1
+  _marketUpdateInterval: 60
+  _sellPriceRatio: 0.7
+  _taxRate: 0.05
+--- !u!4 &1220569554
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1220569552}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 381.4, y: 214.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1237085975
 GameObject:
   m_ObjectHideFlags: 0
@@ -3995,3 +4096,5 @@ SceneRoots:
   - {fileID: 1242267530}
   - {fileID: 1237085976}
   - {fileID: 961343489}
+  - {fileID: 1220569554}
+  - {fileID: 1030453529}

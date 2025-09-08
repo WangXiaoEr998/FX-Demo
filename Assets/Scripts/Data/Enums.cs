@@ -73,6 +73,17 @@ namespace FanXing.Data
     }
 
     /// <summary>
+    /// 土壤状态枚举（与FarmPlotView视觉状态一一对应）
+    /// </summary>
+    public enum PlotState
+    {
+        Locked,          // 未解锁（灰色/带锁）
+        Unlocked_Empty,  // 已解锁未种植（普通土壤）
+        Unlocked_Planted // 已解锁已种植（翻耕土壤）
+    }
+
+
+    /// <summary>
     /// 玩家状态枚举
     /// </summary>
     public enum PlayerState
