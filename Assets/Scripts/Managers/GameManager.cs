@@ -2,32 +2,11 @@ using UnityEngine;
 using FanXing.Data;
 /// <summary>
 /// 游戏总控制器，负责游戏状态管理、场景切换、核心系统初始化
-/// 作者：黄畅修,容泳森
-/// 修改时间：2025-07-23
+/// 作者：黄畅修,容泳森，徐锵
+/// 修改时间：2025-07-25
 /// </summary>
-public class GameManager : MonoBehaviour
+public class GameManager : SingletonMono<GameManager>
 {
-    #region 单例模式
-    private static GameManager _instance;
-    public static GameManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<GameManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("GameManager");
-                    _instance = go.AddComponent<GameManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("游戏状态")]
     [SerializeField] private GameState _currentState = GameState.MainMenu;
@@ -56,18 +35,9 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region Unity生命周期
-    private void Awake()
+    protected override void Awake()
     {
-        // 确保单例唯一性
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        
-        _instance = this;
-        DontDestroyOnLoad(gameObject);
-        
+        base.Awake();
         InitializeGame();
     }
 
@@ -295,25 +265,25 @@ public class GameManager : MonoBehaviour
     private void HandleMainMenuState()
     {
         // 主菜单状态处理
-        Global.UI?.ShowMainMenu();
+        //Global.UI?.ShowUI(UIConst.MainMenu);
     }
 
     private void HandlePlayingState()
     {
         // 游戏进行状态处理
-        Global.UI?.ShowGameHUD();
+        //Global.UI?.ShowUI(UIConst.GameHUD);
     }
 
     private void HandlePausedState()
     {
         // 暂停状态处理
-        Global.UI?.ShowPauseMenu();
+        //Global.UI?.ShowUI(UIConst.PauseMenu);
     }
 
     private void HandleLoadingState()
     {
         // 加载状态处理
-        Global.UI?.ShowLoadingScreen();
+       // Global.UI?.ShowUI(UIConst.LoadingScreen);
     }
 
     /// <summary>

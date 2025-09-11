@@ -1,33 +1,17 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine.UIElements;
+using System.Reflection;
+using static UnityEditor.Experimental.GraphView.GraphView;
+using UnityEngine.UI;
 /// <summary>
 /// UI管理器，负责UI界面的显示、隐藏、切换和管理
-/// 作者：黄畅修
-/// 创建时间：2025-07-12
+/// 作者：黄畅修，徐锵
+/// 创建时间：2025-07-24
 /// </summary>
-public class UIManager : MonoBehaviour
+public class UIManager : SingletonMono<UIManager>
 {
-    #region 单例模式
-    private static UIManager _instance;
-    public static UIManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<UIManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("UIManager");
-                    _instance = go.AddComponent<UIManager>();
-                    DontDestroyOnLoad(go);
-                }
-            }
-            return _instance;
-        }
-    }
-    #endregion
-
     #region 字段定义
     [Header("UI根节点")]
     [SerializeField] private Canvas _mainCanvas;
@@ -41,9 +25,20 @@ public class UIManager : MonoBehaviour
     
     [Header("调试设置")]
     [SerializeField] private bool _enableDebugMode = false;
-    
+    public const string MainMenu = "MainMenu";
+    public const string GameHUD = "GameHUD";
+    public const string PauseMenu = "PauseMenu";
+    public const string LoadingScreen = "LoadingScreen";
     // UI界面字典
-    private Dictionary<string, GameObject> _uiPanels = new Dictionary<string, GameObject>();
+    private Dictionary<string, UIBase> _uiPanels = new Dictionary<string, UIBase>();
+    private Dictionary<UILayerConst, int> _layerMap = new Dictionary<UILayerConst, int>()
+    {
+        [UILayerConst.Background] = 0,
+        [UILayerConst.GameHUD] = 100,
+        [UILayerConst.Panel] = 200,
+        [UILayerConst.PopUP] = 300,
+
+    };
     private Stack<string> _uiStack = new Stack<string>();
     #endregion
 
@@ -65,23 +60,16 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region Unity生命周期
-    private void Awake()
+    protected override void Awake()
     {
-        // 确保单例唯一性
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        
-        _instance = this;
-        DontDestroyOnLoad(gameObject);
-        
+        base.Awake();
+        ShowUI("UI_HUD");
         InitializeUI();
     }
 
     private void Start()
     {
+
         SetupUI();
     }
     #endregion
@@ -92,7 +80,7 @@ public class UIManager : MonoBehaviour
     /// </summary>
     /// <param name="uiName">UI界面名称</param>
     /// <param name="hideOthers">是否隐藏其他界面</param>
-    public void ShowUI(string uiName, bool hideOthers = true)
+    public void ShowUI(string uiName, bool hideOthers = true, object param = null)
     {
         if (string.IsNullOrEmpty(uiName))
         {
@@ -109,25 +97,114 @@ public class UIManager : MonoBehaviour
         // 显示指定界面
         if (_uiPanels.ContainsKey(uiName))
         {
-            _uiPanels[uiName].SetActive(true);
+            _uiPanels[uiName].gameObject.SetActive(true);
+            if (_uiStack.Count > 0)
+            {
+                _uiPanels[_uiStack.Peek()].LoseFocus();
+            }
             _uiStack.Push(uiName);
             
             if (_enableDebugMode)
             {
+                GameObject go = _uiPanels[uiName].gameObject;
+                UIBase uiNode = go.GetComponent<UIBase>();
+                go.SetActive(true);
+                uiNode.OnOpen(param);
+                uiNode.uiName = uiName;
+
                 Debug.Log($"显示UI界面: {uiName}");
             }
         }
         else
         {
-            Debug.LogError($"UI界面不存在: {uiName}");
+            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/UIPrefab/{uiName}.prefab");
+            if (go != null)
+            {
+                if (_uiStack.Count > 0)
+                {
+                    _uiPanels[_uiStack.Peek()].LoseFocus();
+                }
+                _uiStack.Push(uiName);
+                GameObject insGo = Instantiate(go);
+                insGo.transform.SetParent(gameObject.transform);
+               
+                UIBase uiNode = insGo.GetComponent<UIBase>();
+                uiNode.uiName = uiName;
+                RegisterUI(uiName, uiNode);
+                insGo.SetActive(true);
+                uiNode.OnOpen(param);
+                LayerDstribute(uiNode);
+            }
+           // Debug.LogError($"UI界面不存在: {uiName}");
         }
     }
+  
+    public void LayerDstribute(UIBase uIBase)
+    {
+        GameObject go = uIBase.gameObject;
+        Canvas canvas = go.GetComponent<Canvas>();
+        if (canvas == null)
+        {
 
+            canvas = go.AddComponent<Canvas>();
+
+        }
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        // 尝试添加UI组件（如果可用）
+        try
+        {
+            // 使用反射添加CanvasScaler组件
+            var scalerType = System.Type.GetType("UnityEngine.UI.CanvasScaler, UnityEngine.UI");
+            if (scalerType != null)
+            {   
+                var scaler = go.GetComponent(scalerType);
+                if (scaler == null)
+                {
+                     scaler = go.AddComponent(scalerType);
+                }
+                // 设置基本属性
+                var uiScaleModeField = scalerType.GetField("m_UiScaleMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (uiScaleModeField != null)
+                {
+                    uiScaleModeField.SetValue(scaler, 1); // ScaleWithScreenSize = 1
+
+                }
+                PropertyInfo referenceResolutionProp = scalerType.GetProperty("referenceResolution");
+
+                if (referenceResolutionProp != null)
+                {
+                    referenceResolutionProp.SetValue(scaler, new Vector2(Screen.width, Screen.height), null);
+                }
+                else
+                {
+                    Debug.LogError("未找到 referenceResolution 属性！");
+                }
+            }
+
+            // 使用反射添加GraphicRaycaster组件
+            var raycasterType = System.Type.GetType("UnityEngine.UI.GraphicRaycaster, UnityEngine.UI");
+            if (raycasterType != null)
+            {
+                GraphicRaycaster graphic = go.GetComponent<GraphicRaycaster>();
+                if (graphic == null)
+                {
+                    go.AddComponent(raycasterType);
+                }
+           
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"无法添加UI组件: {ex.Message}");
+        }
+        canvas.sortingOrder = _layerMap[uIBase.layer];
+        _layerMap[uIBase.layer]++;
+    }
     /// <summary>
     /// 隐藏UI界面
     /// </summary>
     /// <param name="uiName">UI界面名称</param>
-    public void HideUI(string uiName)
+    public void HideUI(string uiName,bool isDestroy = true)
     {
         if (string.IsNullOrEmpty(uiName))
         {
@@ -137,17 +214,41 @@ public class UIManager : MonoBehaviour
 
         if (_uiPanels.ContainsKey(uiName))
         {
-            _uiPanels[uiName].SetActive(false);
             
             // 从堆栈中移除
             if (_uiStack.Count > 0 && _uiStack.Peek() == uiName)
             {
                 _uiStack.Pop();
             }
-            
+            else if (_uiStack.Count > 0)//没有按顺序关闭UI
+            {
+                RemoveMiddleElement(_uiStack, uiName);
+            }
+            if (_uiStack.Count > 0)
+            {
+                string fName = _uiStack.Peek();
+
+                _uiPanels[fName].gameObject.SetActive(true);
+            }
+            if (_uiStack.Count>0)
+            {
+                _uiPanels[_uiStack.Peek()].OnFocus();
+            }
             if (_enableDebugMode)
             {
                 Debug.Log($"隐藏UI界面: {uiName}");
+            }
+            _uiPanels[uiName].OnClose();
+            _layerMap[_uiPanels[uiName].layer]--;
+            if (isDestroy)
+            {
+                GameObject.Destroy(_uiPanels[uiName].gameObject);
+                _uiPanels.Remove(uiName);
+
+            }
+            else
+            {
+                _uiPanels[uiName].gameObject.SetActive(false);
             }
         }
         else
@@ -155,7 +256,26 @@ public class UIManager : MonoBehaviour
             Debug.LogError($"UI界面不存在: {uiName}");
         }
     }
+    void RemoveMiddleElement(Stack<string> stack, string target)
+    {
+        Stack<string> tempStack = new Stack<string>();
 
+        // 把元素一个一个弹出，放到临时栈中，直到找到目标
+        while (stack.Count > 0)
+        {
+            string top = stack.Pop();
+            if (top == target)
+                break;
+
+            tempStack.Push(top);
+        }
+
+        // 再把临时栈中的元素恢复回去
+        while (tempStack.Count > 0)
+        {
+            stack.Push(tempStack.Pop());
+        }
+    }
     /// <summary>
     /// 隐藏所有UI界面
     /// </summary>
@@ -163,10 +283,10 @@ public class UIManager : MonoBehaviour
     {
         foreach (var panel in _uiPanels.Values)
         {
-            panel.SetActive(false);
+            panel.gameObject.SetActive(false);
         }
         
-        _uiStack.Clear();
+      //  _uiStack.Clear();
         
         if (_enableDebugMode)
         {
@@ -195,43 +315,11 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 显示主菜单
-    /// </summary>
-    public void ShowMainMenu()
-    {
-        ShowUI("MainMenu");
-    }
-
-    /// <summary>
-    /// 显示游戏HUD
-    /// </summary>
-    public void ShowGameHUD()
-    {
-        ShowUI("GameHUD");
-    }
-
-    /// <summary>
-    /// 显示暂停菜单
-    /// </summary>
-    public void ShowPauseMenu()
-    {
-        ShowUI("PauseMenu", false);
-    }
-
-    /// <summary>
-    /// 显示加载界面
-    /// </summary>
-    public void ShowLoadingScreen()
-    {
-        ShowUI("LoadingScreen");
-    }
-
-    /// <summary>
     /// 注册UI界面
     /// </summary>
     /// <param name="uiName">UI名称</param>
     /// <param name="uiObject">UI对象</param>
-    public void RegisterUI(string uiName, GameObject uiObject)
+    public void RegisterUI(string uiName, UIBase uiObject)
     {
         if (string.IsNullOrEmpty(uiName) || uiObject == null)
         {
@@ -245,7 +333,7 @@ public class UIManager : MonoBehaviour
         }
 
         _uiPanels[uiName] = uiObject;
-        uiObject.SetActive(false);
+    
         
         if (_enableDebugMode)
         {
@@ -308,6 +396,7 @@ public class UIManager : MonoBehaviour
         _mainCanvas = canvasGO.AddComponent<Canvas>();
         _mainCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
         _mainCanvas.sortingOrder = 0;
+        canvasGO.transform.SetParent(gameObject.transform, false);
 
         // 尝试添加UI组件（如果可用）
         try
@@ -322,9 +411,20 @@ public class UIManager : MonoBehaviour
                 if (uiScaleModeField != null)
                 {
                     uiScaleModeField.SetValue(scaler, 1); // ScaleWithScreenSize = 1
+                   
+                }
+                PropertyInfo referenceResolutionProp = scalerType.GetProperty("referenceResolution");
+
+                if (referenceResolutionProp != null)
+                {
+                    referenceResolutionProp.SetValue(scaler, new Vector2(Screen.width, Screen.height), null);
+                }
+                else
+                {
+                    Debug.LogError("未找到 referenceResolution 属性！");
                 }
             }
-
+         
             // 使用反射添加GraphicRaycaster组件
             var raycasterType = System.Type.GetType("UnityEngine.UI.GraphicRaycaster, UnityEngine.UI");
             if (raycasterType != null)
@@ -346,29 +446,29 @@ public class UIManager : MonoBehaviour
     private void SetupUI()
     {
         // 实例化并注册UI预制体
-        if (_mainMenuPrefab != null)
-        {
-            GameObject mainMenu = Instantiate(_mainMenuPrefab, _uiRoot);
-            RegisterUI("MainMenu", mainMenu);
-        }
+        //if (_mainMenuPrefab != null)
+        //{
+        //    GameObject mainMenu = Instantiate(_mainMenuPrefab, _uiRoot);
+        //    RegisterUI(UIConst.MainMenu, mainMenu);
+        //}
 
-        if (_gameHUDPrefab != null)
-        {
-            GameObject gameHUD = Instantiate(_gameHUDPrefab, _uiRoot);
-            RegisterUI("GameHUD", gameHUD);
-        }
+        //if (_gameHUDPrefab != null)
+        //{
+        //    GameObject gameHUD = Instantiate(_gameHUDPrefab, _uiRoot);
+        //    RegisterUI(UIConst.GameHUD, gameHUD);
+        //}
 
-        if (_pauseMenuPrefab != null)
-        {
-            GameObject pauseMenu = Instantiate(_pauseMenuPrefab, _uiRoot);
-            RegisterUI("PauseMenu", pauseMenu);
-        }
+        //if (_pauseMenuPrefab != null)
+        //{
+        //    GameObject pauseMenu = Instantiate(_pauseMenuPrefab, _uiRoot);
+        //    RegisterUI(UIConst.PauseMenu, pauseMenu);
+        //}
 
-        if (_loadingScreenPrefab != null)
-        {
-            GameObject loadingScreen = Instantiate(_loadingScreenPrefab, _uiRoot);
-            RegisterUI("LoadingScreen", loadingScreen);
-        }
+        //if (_loadingScreenPrefab != null)
+        //{
+        //    GameObject loadingScreen = Instantiate(_loadingScreenPrefab, _uiRoot);
+        //    RegisterUI(UIConst.LoadingScreen, loadingScreen);
+        //}
 
         if (_enableDebugMode)
         {
@@ -376,4 +476,12 @@ public class UIManager : MonoBehaviour
         }
     }
     #endregion
+}
+
+public enum UILayerConst
+{
+     Background = 1,
+     GameHUD = 2,
+     Panel = 3,
+     PopUP = 4,
 }
