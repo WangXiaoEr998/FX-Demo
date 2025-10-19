@@ -627,7 +627,7 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     {
         try
         {
-            // 简单的XOR加密（生产环境建议使用AES等更安全的加密方式）
+            // XOR加密
             byte[] dataBytes = System.Text.Encoding.UTF8.GetBytes(data);
             byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(_encryptionKey);
             
