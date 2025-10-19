@@ -12,20 +12,20 @@ public class QuestSystem : BaseGameSystem
     #region 字段定义
     [Header("任务系统配置")]
     [SerializeField] private int _maxActiveQuests = 10;
-    #pragma warning disable CS0414 // 字段已赋值但从未使用 - Demo版本中暂未实现相关功能
+#pragma warning disable CS0414 // 字段已赋值但从未使用 - Demo版本中暂未实现相关功能
     [SerializeField] private int _maxCompletedQuests = 100;
-    #pragma warning restore CS0414
+#pragma warning restore CS0414
     [SerializeField] private float _questUpdateInterval = 1.0f;
-    
+
     // 任务管理
     private List<Quest> _activeQuests = new List<Quest>();
     private List<Quest> _completedQuests = new List<Quest>();
     private List<Quest> _availableQuests = new List<Quest>();
     private Dictionary<int, Quest> _questDictionary = new Dictionary<int, Quest>();
-    
+
     // 更新计时器
     private float _updateTimer = 0f;
-    
+
     // 任务ID计数器
     private int _nextQuestId = 1;
     #endregion
@@ -49,7 +49,7 @@ public class QuestSystem : BaseGameSystem
         public string questGiver;
         public List<QuestReward> rewards;
         public List<QuestObjective> objectives;
-        
+
         public Quest(int id, string name, string desc, QuestType type, string giver)
         {
             questId = id;
@@ -78,7 +78,7 @@ public class QuestSystem : BaseGameSystem
         public int quantity;
         public int goldAmount;
         public int experienceAmount;
-        
+
         public QuestReward(RewardType type, int amount)
         {
             rewardType = type;
@@ -100,7 +100,7 @@ public class QuestSystem : BaseGameSystem
         public int currentCount;
         public int targetCount;
         public bool isCompleted;
-        
+
         public QuestObjective(string desc, ObjectiveType type, string target, int count)
         {
             description = desc;
@@ -118,17 +118,17 @@ public class QuestSystem : BaseGameSystem
     /// 系统名称
     /// </summary>
     public override string SystemName => "任务系统";
-    
+
     /// <summary>
     /// 当前活跃任务数量
     /// </summary>
     public int ActiveQuestCount => _activeQuests.Count;
-    
+
     /// <summary>
     /// 已完成任务数量
     /// </summary>
     public int CompletedQuestCount => _completedQuests.Count;
-    
+
     /// <summary>
     /// 可接取任务数量
     /// </summary>
@@ -224,10 +224,10 @@ public class QuestSystem : BaseGameSystem
         for (int i = _activeQuests.Count - 1; i >= 0; i--)
         {
             var quest = _activeQuests[i];
-            
+
             // 检查任务目标完成情况
             CheckQuestObjectives(quest);
-            
+
             // 检查任务是否完成
             if (IsQuestCompleted(quest))
             {
@@ -243,13 +243,13 @@ public class QuestSystem : BaseGameSystem
     private void CheckQuestObjectives(Quest quest)
     {
         bool allObjectivesCompleted = true;
-        
+
         foreach (var objective in quest.objectives)
         {
             if (!objective.isCompleted)
             {
                 allObjectivesCompleted = false;
-                
+
                 // 这里可以添加具体的目标检查逻辑
                 // 例如：检查玩家位置、背包物品、击杀数量等
             }
@@ -279,13 +279,13 @@ public class QuestSystem : BaseGameSystem
     {
         quest.status = QuestStatus.Completed;
         quest.completeTime = Time.time;
-        
+
         _activeQuests.Remove(quest);
         _completedQuests.Add(quest);
-        
+
         // 发放奖励
         GiveQuestRewards(quest);
-        
+
         if (_enableDebugMode)
         {
             Debug.Log($"任务完成: {quest.questName}");
@@ -309,7 +309,7 @@ public class QuestSystem : BaseGameSystem
                         Debug.Log($"获得金钱奖励: {reward.goldAmount}");
                     }
                     break;
-                    
+
                 case RewardType.Experience:
                     // 通过玩家系统发放经验奖励
                     if (_enableDebugMode)
@@ -317,7 +317,7 @@ public class QuestSystem : BaseGameSystem
                         Debug.Log($"获得经验奖励: {reward.experienceAmount}");
                     }
                     break;
-                    
+
                 case RewardType.Item:
                     // 通过背包系统发放物品奖励
                     if (_enableDebugMode)
@@ -390,7 +390,7 @@ public class QuestSystem : BaseGameSystem
 
         quest.status = QuestStatus.InProgress;
         quest.acceptTime = Time.time;
-        
+
         _availableQuests.Remove(quest);
         _activeQuests.Add(quest);
 
@@ -419,7 +419,7 @@ public class QuestSystem : BaseGameSystem
         quest.status = QuestStatus.Available;
         quest.acceptTime = 0f;
         quest.currentProgress = 0;
-        
+
         // 重置任务目标
         foreach (var objective in quest.objectives)
         {
@@ -456,18 +456,18 @@ public class QuestSystem : BaseGameSystem
             if (objective.objectiveType == objectiveType && objective.targetName == targetName && !objective.isCompleted)
             {
                 objective.currentCount += amount;
-                
+
                 if (objective.currentCount >= objective.targetCount)
                 {
                     objective.currentCount = objective.targetCount;
                     objective.isCompleted = true;
-                    
+
                     if (_enableDebugMode)
                     {
                         Debug.Log($"任务目标完成: {objective.description}");
                     }
                 }
-                
+
                 break;
             }
         }
