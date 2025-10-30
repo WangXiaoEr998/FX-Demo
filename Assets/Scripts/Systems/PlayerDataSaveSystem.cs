@@ -29,7 +29,7 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     
     // 当前数据
     private PlayerData _currentPlayerData;
-    private int _currentSaveSlot = 0;
+    private int _currentSaveSlot = -1;
     
     // 自动保存
     private float _autoSaveTimer = 0f;
@@ -41,6 +41,10 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     
     // 保存槽信息
     private Dictionary<int, SaveSlotInfo> _saveSlots = new Dictionary<int, SaveSlotInfo>();
+    // 系统就绪标志（当 SystemManager 完成初始化后为 true）
+    private bool _systemsReady = false;
+    // 延迟事件队列（在系统未就绪时将触发动作排队）
+    private Queue<Action> _pendingEventActions = new Queue<Action>();
     
     #endregion
 
@@ -71,11 +75,48 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     {
         base.Awake();
         InitializeSaveSystem();
+    // 提前加载保存槽元数据，防止其他在 Start() 中运行的系统出现竞态，
+    // 使它们可以在自己的 Start() 中安全地查询可用的保存槽信息。
+        LoadSaveSlotInfos();
+
+    // 订阅全局系统初始化完成事件，确保在其它系统准备好后再派发与玩家相关的事件。
+    // 同时处理 SystemManager 在我们 Awake 之前已完成初始化的情况。
+        try
+        {
+            if (Global != null && Global.Event != null)
+            {
+                // 注册无参数回调
+                Global.Event.Register(Global.Events.System.INITIALIZED, OnSystemsInitialized);
+            }
+
+            // 如果 SystemManager 已经完成初始化，则立即触发已挂起的事件
+            if (FanXing.Data.SystemManager.Instance != null && FanXing.Data.SystemManager.Instance.SystemsInitialized)
+            {
+                OnSystemsInitialized();
+            }
+        }
+        catch (Exception e)
+        {
+            LogWarning($"订阅系统初始化事件失败: {e.Message}");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 注销初始化监听器（如果仍然注册）
+        try
+        {
+            if (Global != null && Global.Event != null)
+            {
+                Global.Event.UnRegister(Global.Events.System.INITIALIZED, OnSystemsInitialized);
+            }
+        }
+        catch { }
     }
 
     private void Start()
     {
-        LoadSaveSlotInfos();
+        // 特意留空 —— 保存槽信息的加载已移到 Awake 中，确保在其他系统的 Start() 运行前可用。
     }
 
     private void Update()
@@ -86,7 +127,11 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
             
             if (_autoSaveTimer >= _autoSaveInterval)
             {
-                AutoSave();
+                // 仅在选择了有效的保存槽时才执行自动保存
+                if (_currentSaveSlot >= 0)
+                {
+                    AutoSave();
+                }
                 _autoSaveTimer = 0f;
             }
         }
@@ -95,7 +140,7 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     private void OnApplicationQuit()
     {
         // 退出时自动保存
-        if (_isDirty && _currentPlayerData != null)
+        if (_isDirty && _currentPlayerData != null && _currentSaveSlot >= 0)
         {
             SavePlayerData(_currentSaveSlot);
         }
@@ -104,10 +149,64 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     private void OnApplicationPause(bool pauseStatus)
     {
         // 应用暂停时保存（移动平台）
-        if (pauseStatus && _isDirty && _currentPlayerData != null)
+        if (pauseStatus && _isDirty && _currentPlayerData != null && _currentSaveSlot >= 0)
         {
             SavePlayerData(_currentSaveSlot);
         }
+    }
+    #endregion
+
+    #region 延迟事件队列/系统就绪处理
+    private void OnSystemsInitialized()
+    {
+        try
+        {
+            _systemsReady = true;
+
+            // 注销监听器
+            if (Global != null && Global.Event != null)
+            {
+                Global.Event.UnRegister(Global.Events.System.INITIALIZED, OnSystemsInitialized);
+            }
+        }
+        catch { }
+
+        // 刷新并执行所有挂起的动作
+        while (_pendingEventActions.Count > 0)
+        {
+            try
+            {
+                var act = _pendingEventActions.Dequeue();
+                act?.Invoke();
+            }
+            catch (Exception e)
+            {
+                LogWarning($"延迟触发事件时出错: {e.Message}");
+            }
+        }
+    }
+
+    private void EnqueueOrInvokeEvent(Action action)
+    {
+        if (action == null)
+            return;
+
+        // 如果系统已就绪并且全局事件管理器可用，则立即执行事件
+        if (_systemsReady && Global != null && Global.Event != null)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                LogWarning($"触发事件时出错: {e.Message}");
+            }
+            return;
+        }
+
+        // 否则将事件排队，稍后触发
+        _pendingEventActions.Enqueue(action);
     }
     #endregion
 
@@ -143,9 +242,10 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
         
         if (success)
         {
-            // 触发玩家创建事件
-            Global.Event.TriggerEvent(Global.Events.Player.CREATED, 
-                new PlayerCreatedEventArgs(_currentPlayerData));
+            // 触发玩家创建事件（保持防御性，避免在系统未就绪时抛出）
+            // 触发玩家创建事件（如果系统未就绪则排队直到初始化完成）
+            EnqueueOrInvokeEvent(() => Global.Event.TriggerEvent(Global.Events.Player.CREATED,
+                        new PlayerCreatedEventArgs(_currentPlayerData)));
             
             LogDebug($"创建新玩家数据: {playerName}, 保存槽: {slotIndex}");
         }
@@ -223,9 +323,10 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
             _isDirty = false;
             _autoSaveTimer = 0f;
 
-            // 触发保存事件
-            Global.Event.TriggerEvent(Global.Events.Data.SAVED, 
-                new PlayerDataSavedEventArgs(_currentPlayerData));
+            // 触发保存事件（防御性触发，避免未初始化的事件系统抛出）
+            // 触发保存事件（如果系统未就绪则排队直到初始化完成）
+            EnqueueOrInvokeEvent(() => Global.Event.TriggerEvent(Global.Events.Data.SAVED,
+                        new PlayerDataSavedEventArgs(_currentPlayerData)));
 
             LogDebug($"玩家数据已保存到槽位 {slotIndex}: {savePath}");
             return true;
@@ -302,9 +403,10 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
             // 更新最后登录时间
             _currentPlayerData.lastLoginTime = DateTime.Now.ToBinary();
 
-            // 触发加载事件
-            Global.Event.TriggerEvent(Global.Events.Player.LOADED, 
-                new PlayerLoadedEventArgs(_currentPlayerData));
+            // 触发加载事件（防御性触发）
+            // 触发加载事件（如果系统未就绪则排队直到初始化完成）
+            EnqueueOrInvokeEvent(() => Global.Event.TriggerEvent(Global.Events.Player.LOADED,
+                        new PlayerLoadedEventArgs(_currentPlayerData)));
 
             LogDebug($"玩家数据已加载: {_currentPlayerData.playerName}, 槽位: {slotIndex}");
             return true;
@@ -401,6 +503,9 @@ public class PlayerDataSaveSystem : SingletonMono<PlayerDataSaveSystem>
     /// <returns>是否有存档</returns>
     public bool HasSaveData(int slotIndex)
     {
+        if (slotIndex < 0 || slotIndex >= _maxSaveSlots)
+            return false;
+
         return File.Exists(GetSaveFilePath(slotIndex));
     }
     #endregion
